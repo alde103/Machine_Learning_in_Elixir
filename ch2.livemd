@@ -1,0 +1,359 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Chapter 2. Get Comfortable with Nx
+
+```elixir
+Mix.install([
+  {:nx, "~> 0.5"},
+  {:exla, "~> 0.5"},
+  {:benchee, github: "bencheeorg/benchee", override: true}
+])
+```
+
+## Understanding Nx Tensors
+
+```elixir
+Nx.tensor([1, 2, 3])
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64[3]
+  [1, 2, 3]
+>
+```
+
+```elixir
+a = Nx.tensor([[1, 2, 3], [4, 5, 6]])
+b = Nx.tensor(1.0)
+c = Nx.tensor([[[[[[1.0, 2]]]]]])
+dbg(a)
+dbg(b)
+dbg(c)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[/home/alde/.local/share/livebook/autosaved/2024_07_11/04_44_wcml/chapter_2_get_comfortable_with_nx.livemd#cell:agqvapjw6ptkyp55:4: (file)]
+a #=> #Nx.Tensor<
+  s64[2][3]
+  [
+    [1, 2, 3],
+    [4, 5, 6]
+  ]
+>
+
+[/home/alde/.local/share/livebook/autosaved/2024_07_11/04_44_wcml/chapter_2_get_comfortable_with_nx.livemd#cell:agqvapjw6ptkyp55:5: (file)]
+b #=> #Nx.Tensor<
+  f32
+  1.0
+>
+
+[/home/alde/.local/share/livebook/autosaved/2024_07_11/04_44_wcml/chapter_2_get_comfortable_with_nx.livemd#cell:agqvapjw6ptkyp55:6: (file)]
+c #=> #Nx.Tensor<
+  f32[1][1][1][1][1][2]
+  [
+    [
+      [
+        [
+          [
+            [1.0, 2.0]
+          ]
+        ]
+      ]
+    ]
+  ]
+>
+
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  f32[1][1][1][1][1][2]
+  [
+    [
+      [
+        [
+          [
+            [1.0, 2.0]
+          ]
+        ]
+      ]
+    ]
+  ]
+>
+```
+
+## Tensors Have a Type
+
+```elixir
+a = Nx.tensor([1, 2, 3])
+b = Nx.tensor([1.0, 2.0, 3.0])
+dbg(a)
+dbg(b)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[/home/alde/.local/share/livebook/autosaved/2024_07_11/04_44_wcml/chapter_2_get_comfortable_with_nx.livemd#cell:jw36opkkerlgrszj:3: (file)]
+a #=> #Nx.Tensor<
+  s64[3]
+  [1, 2, 3]
+>
+
+[/home/alde/.local/share/livebook/autosaved/2024_07_11/04_44_wcml/chapter_2_get_comfortable_with_nx.livemd#cell:jw36opkkerlgrszj:4: (file)]
+b #=> #Nx.Tensor<
+  f32[3]
+  [1.0, 2.0, 3.0]
+>
+
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  f32[3]
+  [1.0, 2.0, 3.0]
+>
+```
+
+```elixir
+a == b
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+false
+```
+
+```elixir
+# Underflow example
+Nx.tensor(0.0000000000000000000000000000000000000000000001)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  f32
+  0.0
+>
+```
+
+```elixir
+# Defining a tensor qith an especified data type:
+Nx.tensor(1.0e-45, type: {:f, 64})
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  f64
+  1.0e-45
+>
+```
+
+```elixir
+# Overflow example:
+Nx.tensor(128, type: {:s, 8})
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s8
+  -128
+>
+```
+
+```elixir
+# Nx tensors have a homogenous type. Nx will choose a default type capable of representing
+# the values you are trying to use, unless you explicity state otherwise 
+# by passing a :type parameter, for this example f32 can hold all values:
+
+Nx.tensor([1.0, 2, 3])
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  f32[3]
+  [1.0, 2.0, 3.0]
+>
+```
+
+## Tensors Have Shape
+
+```elixir
+a = Nx.tensor([1, 2])
+b = Nx.tensor([[1, 2], [3, 4]])
+c = Nx.tensor([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+dbg(a)
+dbg(b)
+dbg(c)
+b1 = Nx.tensor([[1, 2]])
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[/home/alde/.local/share/livebook/autosaved/2024_07_11/04_44_wcml/chapter_2_get_comfortable_with_nx.livemd#cell:jf5gpatbuj7t4uyc:4: (file)]
+a #=> #Nx.Tensor<
+  s64[2]
+  [1, 2]
+>
+
+[/home/alde/.local/share/livebook/autosaved/2024_07_11/04_44_wcml/chapter_2_get_comfortable_with_nx.livemd#cell:jf5gpatbuj7t4uyc:5: (file)]
+b #=> #Nx.Tensor<
+  s64[2][2]
+  [
+    [1, 2],
+    [3, 4]
+  ]
+>
+
+[/home/alde/.local/share/livebook/autosaved/2024_07_11/04_44_wcml/chapter_2_get_comfortable_with_nx.livemd#cell:jf5gpatbuj7t4uyc:6: (file)]
+c #=> #Nx.Tensor<
+  s64[2][2][2]
+  [
+    [
+      [1, 2],
+      [3, 4]
+    ],
+    [
+      [5, 6],
+      [7, 8]
+    ]
+  ]
+>
+
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64[1][2]
+  [
+    [1, 2]
+  ]
+>
+```
+
+```elixir
+Nx.tensor(10)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64
+  10
+>
+```
+
+```elixir
+# Named tensors introduce dimension or axis names for more idiomatic tensor manipulation:
+Nx.tensor([[1, 2, 3], [4, 5, 6]], names: [:x, :y])
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64[x: 2][y: 3]
+  [
+    [1, 2, 3],
+    [4, 5, 6]
+  ]
+>
+```
+
+## Tensors Have Data
+
+```elixir
+# Tensor data is stored as a byte array or an Elixir binary.
+
+a = Nx.tensor([[1, 2, 3], [4, 5, 6]])
+dbg(a)
+
+Nx.to_binary(a)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[/home/alde/.local/share/livebook/autosaved/2024_07_11/04_44_wcml/chapter_2_get_comfortable_with_nx.livemd#cell:kndfh23whbo4xijg:4: (file)]
+a #=> #Nx.Tensor<
+  s64[2][3]
+  [
+    [1, 2, 3],
+    [4, 5, 6]
+  ]
+>
+
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+<<1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 5,
+  0, 0, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0>>
+```
+
+```elixir
+# Because Nx has to turn your data into a binary representation when you use Nx.tensor/2, 
+# It’s more performant to, instead, create tensors using Nx.from_binary/2, and Nx.reshape/2:
+
+<<
+  1::64-signed-native, 2::64-signed-native, 3::64-signed-native, 
+  4::64-signed-native, 5::64-signed-native, 6::64-signed-native, 
+>>
+|> Nx.from_binary({:s, 64})
+|> Nx.reshape({2, 3})
+
+# However it is more maintainable to do it with the list syntax, 
+# Note: The native modifier tells the VM to use your system’s native endianness.
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64[2][3]
+  [
+    [1, 2, 3],
+    [4, 5, 6]
+  ]
+>
+```
+
+## Tensor Are Immutable
+
+Nx tensors are immutable, which means that none of Nx’s operations
+change the tensor’s underlying properties. Every operation returns a new
+tensor with new data every time.
+
+<!-- livebook:{"break_markdown":true} -->
+
+Nx overcomes the limitation of immutability by introducing a pro-
+gramming model that enables Nx operator fusion.
+
+## Using Nx Operations
