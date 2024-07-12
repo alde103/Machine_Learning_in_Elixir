@@ -37,7 +37,7 @@ dbg(c)
 <!-- livebook:{"output":true} -->
 
 ```
-[/home/alde/.local/share/livebook/autosaved/2024_07_11/04_44_wcml/chapter_2_get_comfortable_with_nx.livemd#cell:agqvapjw6ptkyp55:4: (file)]
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:ugq3xv5wuf2c55yp:4: (file)]
 a #=> #Nx.Tensor<
   s64[2][3]
   [
@@ -46,13 +46,13 @@ a #=> #Nx.Tensor<
   ]
 >
 
-[/home/alde/.local/share/livebook/autosaved/2024_07_11/04_44_wcml/chapter_2_get_comfortable_with_nx.livemd#cell:agqvapjw6ptkyp55:5: (file)]
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:ugq3xv5wuf2c55yp:5: (file)]
 b #=> #Nx.Tensor<
   f32
   1.0
 >
 
-[/home/alde/.local/share/livebook/autosaved/2024_07_11/04_44_wcml/chapter_2_get_comfortable_with_nx.livemd#cell:agqvapjw6ptkyp55:6: (file)]
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:ugq3xv5wuf2c55yp:6: (file)]
 c #=> #Nx.Tensor<
   f32[1][1][1][1][1][2]
   [
@@ -102,13 +102,13 @@ dbg(b)
 <!-- livebook:{"output":true} -->
 
 ```
-[/home/alde/.local/share/livebook/autosaved/2024_07_11/04_44_wcml/chapter_2_get_comfortable_with_nx.livemd#cell:jw36opkkerlgrszj:3: (file)]
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:qmd7fb5bvnbl4nck:3: (file)]
 a #=> #Nx.Tensor<
   s64[3]
   [1, 2, 3]
 >
 
-[/home/alde/.local/share/livebook/autosaved/2024_07_11/04_44_wcml/chapter_2_get_comfortable_with_nx.livemd#cell:jw36opkkerlgrszj:4: (file)]
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:qmd7fb5bvnbl4nck:4: (file)]
 b #=> #Nx.Tensor<
   f32[3]
   [1.0, 2.0, 3.0]
@@ -210,13 +210,13 @@ b1 = Nx.tensor([[1, 2]])
 <!-- livebook:{"output":true} -->
 
 ```
-[/home/alde/.local/share/livebook/autosaved/2024_07_11/04_44_wcml/chapter_2_get_comfortable_with_nx.livemd#cell:jf5gpatbuj7t4uyc:4: (file)]
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:w2rz7flewm4gwyqt:4: (file)]
 a #=> #Nx.Tensor<
   s64[2]
   [1, 2]
 >
 
-[/home/alde/.local/share/livebook/autosaved/2024_07_11/04_44_wcml/chapter_2_get_comfortable_with_nx.livemd#cell:jf5gpatbuj7t4uyc:5: (file)]
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:w2rz7flewm4gwyqt:5: (file)]
 b #=> #Nx.Tensor<
   s64[2][2]
   [
@@ -225,7 +225,7 @@ b #=> #Nx.Tensor<
   ]
 >
 
-[/home/alde/.local/share/livebook/autosaved/2024_07_11/04_44_wcml/chapter_2_get_comfortable_with_nx.livemd#cell:jf5gpatbuj7t4uyc:6: (file)]
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:w2rz7flewm4gwyqt:6: (file)]
 c #=> #Nx.Tensor<
   s64[2][2][2]
   [
@@ -299,7 +299,7 @@ Nx.to_binary(a)
 <!-- livebook:{"output":true} -->
 
 ```
-[/home/alde/.local/share/livebook/autosaved/2024_07_11/04_44_wcml/chapter_2_get_comfortable_with_nx.livemd#cell:kndfh23whbo4xijg:4: (file)]
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:ualcrxj7pwnwbg6a:4: (file)]
 a #=> #Nx.Tensor<
   s64[2][3]
   [
@@ -357,3 +357,1207 @@ Nx overcomes the limitation of immutability by introducing a pro-
 gramming model that enables Nx operator fusion.
 
 ## Using Nx Operations
+
+Nx comes with a number of operations you can use and compose into complex
+mathematical operations and algorithms.
+
+## Shape and Type Operations
+
+```elixir
+# Shape and type operations work on the shape and type properties of a tensor.
+a = Nx.tensor([1, 2, 3])
+
+dbg(a)
+
+a
+|> Nx.as_type({:f, 32})
+|> Nx.reshape({1, 3, 1})
+
+# It should change from {:s, 64} to {:f, 32}, and reshaped as [1][3][1] 
+# Note: Nx.reshape/2 is a constant-time operation. It doesn't change the data therefore, 
+# there is no modification to the binary itself.
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:4w7uvom27vzkc6ab:4: (file)]
+a #=> #Nx.Tensor<
+  s64[3]
+  [1, 2, 3]
+>
+
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  f32[1][3][1]
+  [
+    [
+      [1.0],
+      [2.0],
+      [3.0]
+    ]
+  ]
+>
+```
+
+```elixir
+# Nx.as_type/2 does manipulate the tensor’s underlying data. It is possible to
+# change the underyling type in constant-time using Nx.bitcast/2.
+
+Nx.bitcast(a, {:f, 64})
+
+# Note: bitcast will drastically change the values. That’s because
+# you’re trying to interpret 64-bit integer bytes as 64-bit float bytes.
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  f64[3]
+  [5.0e-324, 1.0e-323, 1.5e-323]
+>
+```
+
+## Element-wise Unary Operations
+
+```elixir
+# Element-wise unary operations are similar to calling Enum.map/2 on a list of data 
+# with a mathematical operation.
+a = [-1, -2, -3, 0, 1, 2, 3]
+b = Enum.map(a, &abs/1)
+dbg(b)
+
+# Nx implements a number of operations that work element-wise on the tensor’s data, 
+# regardless of the degree of nesting present.
+
+a = Nx.tensor([[[-1, -2, -3], [-4, -5, -6]], [[1, 2, 3], [4, 5, 6]]])
+
+Nx.abs(a)
+
+# Nx has a number of functions that work in
+# exactly the same way for computing element-wise square roots, exponentials,
+# logarithms, etc. 
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:iymo4kucyvfk6iw3:5: (file)]
+b #=> [1, 2, 3, 0, 1, 2, 3]
+
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64[2][2][3]
+  [
+    [
+      [1, 2, 3],
+      [4, 5, 6]
+    ],
+    [
+      [1, 2, 3],
+      [4, 5, 6]
+    ]
+  ]
+>
+```
+
+## Element-wise Binary Operations
+
+```elixir
+a = [1, 2, 3]
+b = [4, 5, 6]
+Enum.zip_with(a, b, fn x, y -> x + y end)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[5, 7, 9]
+```
+
+```elixir
+a = Nx.tensor([[1, 2, 3], [4, 5, 6]])
+b = Nx.tensor([[6, 7, 8], [9, 10, 11]])
+
+Nx.add(a, b)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64[2][3]
+  [
+    [7, 9, 11],
+    [13, 15, 17]
+  ]
+>
+```
+
+```elixir
+Nx.multiply(a, b)
+# Binary operations work on corresponding elements in two tensors.
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64[2][3]
+  [
+    [6, 14, 24],
+    [36, 50, 66]
+  ]
+>
+```
+
+```elixir
+# If you have tensor’s with different shapes and you attempt to perform a
+# binary operation on them, Nx will attempt to broadcast your tensors together.
+# Broadcasting is the process of repeating an operation over the dimensions of
+# two tensors to make their shapes compatible.
+
+# Two shapes can be broadcast together only when the following conditions are met:
+# 1. One of the shapes is a scalar OR one of the dimensions is size 1.
+
+a = Nx.tensor([[1, 2, 3], [4, 5, 6]])
+b = Nx.tensor(30)
+r = Nx.add(a, b)
+
+dbg(r)
+
+c = Nx.tensor([30])
+r = Nx.add(a, c)
+
+# Note: If the ranks of shapes do not match, Nx will try to prepend dimensions 
+# of size 1 to the lower rank shape to perform broadcasting.
+
+# Shapes Matching Example: {1, 3, 3, 2} and {4, 1, 3, 2}
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:vv73tsfhkbkq4yf3:13: (file)]
+r #=> #Nx.Tensor<
+  s64[2][3]
+  [
+    [31, 32, 33],
+    [34, 35, 36]
+  ]
+>
+
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64[2][3]
+  [
+    [31, 32, 33],
+    [34, 35, 36]
+  ]
+>
+```
+
+```elixir
+# 2. Corresponding dimensions have the same size. 
+a = Nx.tensor([[1, 2, 3], [4, 5, 6]])
+b = Nx.tensor([1, 2, 3])
+
+Nx.add(a, b)
+
+# Shapes No-Matching Example: {1, 3, 3, 2} and {4, 2, 3, 2} (index 1 doesn't match)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64[2][3]
+  [
+    [2, 4, 6],
+    [5, 7, 9]
+  ]
+>
+```
+
+## Reductions
+
+```elixir
+revs = Nx.tensor([85, 76, 42, 34, 46, 23, 52, 99, 22, 32, 85, 51])
+Nx.sum(revs)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64
+  647
+>
+```
+
+```elixir
+# It works with axes.
+revs =
+  Nx.tensor(
+    [
+      [21, 64, 86, 26, 74, 81, 38, 79, 70, 48, 85, 33],
+      [64, 82, 48, 39, 70, 71, 81, 53, 50, 67, 36, 50],
+      [68, 74, 39, 78, 95, 62, 53, 21, 43, 59, 51, 88],
+      [47, 74, 97, 51, 98, 47, 61, 36, 83, 55, 74, 43]
+    ],
+    names: [:year, :month]
+  )
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64[year: 4][month: 12]
+  [
+    [21, 64, 86, 26, 74, 81, 38, 79, 70, 48, 85, 33],
+    [64, 82, 48, 39, 70, 71, 81, 53, 50, 67, 36, 50],
+    [68, 74, 39, 78, 95, 62, 53, 21, 43, 59, 51, 88],
+    [47, 74, 97, 51, 98, 47, 61, 36, 83, 55, 74, 43]
+  ]
+>
+```
+
+```elixir
+Nx.sum(revs, axes: [:year])
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64[month: 12]
+  [200, 294, 270, 194, 337, 261, 233, 189, 246, 229, 246, 214]
+>
+```
+
+```elixir
+Nx.sum(revs, axes: [:month])
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64[year: 4]
+  [705, 711, 731, 766]
+>
+```
+
+## Going from def to defn
+
+```elixir
+# There is no acceleration.
+defmodule MyCommonModule do
+  def adds_one(x) do
+    Nx.add(x, 1)
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, MyCommonModule, <<70, 79, 82, 49, 0, 0, 6, ...>>, {:adds_one, 1}}
+```
+
+```elixir
+MyCommonModule.adds_one(1)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64
+  2
+>
+```
+
+```elixir
+defmodule MyModule do
+  import Nx.Defn #imports the definition for Nx numerical definitions
+
+  # Nx numerical definitions is an Elixir function that will be 
+  # just-in-time (JIT) compiled using a valid Nx compiler.
+  
+  # Just-in-time compilation means that a special version of
+  # your function will be compiled when the function is invoked.
+  defn adds_one(x) do
+    Nx.add(x, 1) |> print_expr()
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, MyModule, <<70, 79, 82, 49, 0, 0, 9, ...>>, true}
+```
+
+```elixir
+MyModule.adds_one(Nx.tensor([1, 2, 3]))
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64[3]
+  
+  Nx.Defn.Expr
+  parameter a:0   s64[3]
+  b = add 1, a    s64[3]
+>
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64[3]
+  [2, 3, 4]
+>
+```
+
+```elixir
+# This sets the compiler to a default value.
+Nx.Defn.global_default_options([])
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[]
+```
+
+```elixir
+defmodule Softmax do
+  import Nx.Defn
+  defn softmax(n), do: Nx.exp(n) / Nx.sum(Nx.exp(n))
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, Softmax, <<70, 79, 82, 49, 0, 0, 9, ...>>, true}
+```
+
+```elixir
+Softmax.softmax(Nx.tensor([1, 2, 3]))
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  f32[3]
+  [0.09003057330846786, 0.2447284758090973, 0.6652409434318542]
+>
+```
+
+```elixir
+key = Nx.Random.key(42)
+{tensor, _key} = Nx.Random.uniform(key, shape: {1_000_000})
+
+Benchee.run(
+  %{
+    "JIT with EXLA" => fn ->
+      apply(EXLA.jit(&Softmax.softmax/1), [tensor])
+    end,
+    "Regular Elixir" => fn ->
+      Softmax.softmax(tensor)
+    end
+  },
+  time: 10
+)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+Warning: the benchmark JIT with EXLA is using an evaluated function.
+  Evaluated functions perform slower than compiled functions.
+  You can move the Benchee caller to a function in a module and invoke `Mod.fun()` instead.
+  Alternatively, you can move the benchmark into a benchmark.exs file and run mix run benchmark.exs
+
+Warning: the benchmark Regular Elixir is using an evaluated function.
+  Evaluated functions perform slower than compiled functions.
+  You can move the Benchee caller to a function in a module and invoke `Mod.fun()` instead.
+  Alternatively, you can move the benchmark into a benchmark.exs file and run mix run benchmark.exs
+
+Operating System: Linux
+CPU Information: Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz
+Number of Available Cores: 12
+Available memory: 15.48 GB
+Elixir 1.16.3
+Erlang 26.1
+JIT enabled: true
+
+Benchmark suite executing with the following configuration:
+warmup: 2 s
+time: 10 s
+memory time: 0 ns
+reduction time: 0 ns
+parallel: 1
+inputs: none specified
+Estimated total run time: 24 s
+
+Benchmarking JIT with EXLA ...
+Benchmarking Regular Elixir ...
+Calculating statistics...
+Formatting results...
+
+Name                     ips        average  deviation         median         99th %
+JIT with EXLA         568.41        1.76 ms    ±33.98%        1.58 ms        3.95 ms
+Regular Elixir          2.42      412.50 ms     ±4.00%      408.99 ms      463.37 ms
+
+Comparison: 
+JIT with EXLA         568.41
+Regular Elixir          2.42 - 234.47x slower +410.74 ms
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%Benchee.Suite{
+  system: %Benchee.System{
+    elixir: "1.16.3",
+    erlang: "26.1",
+    jit_enabled?: true,
+    num_cores: 12,
+    os: :Linux,
+    available_memory: "15.48 GB",
+    cpu_speed: "Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz"
+  },
+  configuration: %Benchee.Configuration{
+    parallel: 1,
+    time: 10000000000.0,
+    warmup: 2000000000.0,
+    memory_time: 0.0,
+    reduction_time: 0.0,
+    pre_check: false,
+    formatters: [Benchee.Formatters.Console],
+    percentiles: ~c"2c",
+    print: %{configuration: true, benchmarking: true, fast_warning: true},
+    inputs: nil,
+    input_names: [],
+    save: false,
+    load: false,
+    unit_scaling: :best,
+    assigns: %{},
+    before_each: nil,
+    after_each: nil,
+    before_scenario: nil,
+    after_scenario: nil,
+    measure_function_call_overhead: false,
+    title: nil,
+    profile_after: false
+  },
+  scenarios: [
+    %Benchee.Scenario{
+      name: "JIT with EXLA",
+      job_name: "JIT with EXLA",
+      function: #Function<43.105768164/0 in :erl_eval.expr/6>,
+      input_name: :__no_input,
+      input: :__no_input,
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 1759290.1674598977,
+          ips: 568.4110662903449,
+          std_dev: 597734.6715113451,
+          std_dev_ratio: 0.3397590019924727,
+          std_dev_ips: 193.12277660428484,
+          median: 1575323.0,
+          percentiles: %{50 => 1575323.0, 99 => 3948032.540000007},
+          mode: [1432883, 1421529, 1803310, 1372578, 1494029, 1747938, 1434973, 1329487, 1595744,
+           1618407, 1608091, 1508062, 1768919, 1300826, 1740979, 1451466],
+          minimum: 1041350,
+          maximum: 11129134,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 5673
+        },
+        samples: [1639379, 1616334, 1550544, 1341085, 3264853, 1289871, 1254924, 1699621, 1940291,
+         1854261, 1357314, 1944266, 1440354, 1926147, 1345474, 1635064, 1598889, 1862415, 1278248,
+         1689497, 1518654, 1840661, 1368176, 1643213, 1577622, 1921602, 1266253, 1694701, 1451466,
+         2065395, 1826988, 1613940, 1346007, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: nil,
+          ips: nil,
+          std_dev: nil,
+          std_dev_ratio: nil,
+          std_dev_ips: nil,
+          median: nil,
+          percentiles: nil,
+          mode: nil,
+          minimum: nil,
+          maximum: nil,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 0
+        },
+        samples: []
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: nil,
+          ips: nil,
+          std_dev: nil,
+          std_dev_ratio: nil,
+          std_dev_ips: nil,
+          median: nil,
+          percentiles: nil,
+          mode: nil,
+          minimum: nil,
+          maximum: nil,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 0
+        },
+        samples: []
+      }
+    },
+    %Benchee.Scenario{
+      name: "Regular Elixir",
+      job_name: "Regular Elixir",
+      function: #Function<43.105768164/0 in :erl_eval.expr/6>,
+      input_name: :__no_input,
+      input: :__no_input,
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 412499167.44,
+          ips: 2.4242473171669,
+          std_dev: 16493903.65334858,
+          std_dev_ratio: 0.03998530168123963,
+          std_dev_ips: 0.09693426032685432,
+          median: 408991980.0,
+          percentiles: %{50 => 408991980.0, 99 => 463369554.0},
+          mode: nil,
+          minimum: 393838645,
+          maximum: 463369554,
+          relative_more: 234.46909160844996,
+          relative_less: 0.004264954468582764,
+          absolute_difference: 410739877.2725401,
+          sample_size: 25
+        },
+        samples: [426099068, 409290688, 397875110, 396902579, 411936992, 399073003, 400361571,
+         412905910, 398465654, 407401492, 424624191, 425676259, 400020081, 406418090, 441854683,
+         399817698, 393838645, 402311986, 408991980, 423748506, 400610774, 413712185, 413036383,
+         463369554, 434136104]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: nil,
+          ips: nil,
+          std_dev: nil,
+          std_dev_ratio: nil,
+          std_dev_ips: nil,
+          median: nil,
+          percentiles: nil,
+          mode: nil,
+          minimum: nil,
+          maximum: nil,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 0
+        },
+        samples: []
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: nil,
+          ips: nil,
+          std_dev: nil,
+          std_dev_ratio: nil,
+          std_dev_ips: nil,
+          median: nil,
+          percentiles: nil,
+          mode: nil,
+          minimum: nil,
+          maximum: nil,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 0
+        },
+        samples: []
+      }
+    }
+  ]
+}
+```
+
+```elixir
+# tell Nx to always JIT compile numerical definitions with a given compiler by
+# setting defn options
+
+Nx.Defn.global_default_options(compiler: EXLA)
+
+# In an elixir project, configure the application with the following lines (config.exs)
+# config :nx, :default_options, [compiler: EXLA]
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[compiler: EXLA]
+```
+
+```elixir
+key = Nx.Random.key(42)
+{tensor, _key} = Nx.Random.uniform(key, shape: {1_000_000})
+
+# Since the default is EXLA, both benchmark should be nearly the same.
+Benchee.run(
+  %{
+    "JIT with EXLA" => fn ->
+      apply(EXLA.jit(&Softmax.softmax/1), [tensor])
+    end,
+    "Regular Elixir" => fn ->
+      Softmax.softmax(tensor)
+    end
+  },
+  time: 10
+)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+Warning: the benchmark JIT with EXLA is using an evaluated function.
+  Evaluated functions perform slower than compiled functions.
+  You can move the Benchee caller to a function in a module and invoke `Mod.fun()` instead.
+  Alternatively, you can move the benchmark into a benchmark.exs file and run mix run benchmark.exs
+
+Warning: the benchmark Regular Elixir is using an evaluated function.
+  Evaluated functions perform slower than compiled functions.
+  You can move the Benchee caller to a function in a module and invoke `Mod.fun()` instead.
+  Alternatively, you can move the benchmark into a benchmark.exs file and run mix run benchmark.exs
+
+Operating System: Linux
+CPU Information: Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz
+Number of Available Cores: 12
+Available memory: 15.48 GB
+Elixir 1.16.3
+Erlang 26.1
+JIT enabled: true
+
+Benchmark suite executing with the following configuration:
+warmup: 2 s
+time: 10 s
+memory time: 0 ns
+reduction time: 0 ns
+parallel: 1
+inputs: none specified
+Estimated total run time: 24 s
+
+Benchmarking JIT with EXLA ...
+Benchmarking Regular Elixir ...
+Calculating statistics...
+Formatting results...
+
+Name                     ips        average  deviation         median         99th %
+Regular Elixir        584.71        1.71 ms    ±33.72%        1.52 ms        3.68 ms
+JIT with EXLA         560.89        1.78 ms    ±33.43%        1.61 ms        3.63 ms
+
+Comparison: 
+Regular Elixir        584.71
+JIT with EXLA         560.89 - 1.04x slower +0.0726 ms
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%Benchee.Suite{
+  system: %Benchee.System{
+    elixir: "1.16.3",
+    erlang: "26.1",
+    jit_enabled?: true,
+    num_cores: 12,
+    os: :Linux,
+    available_memory: "15.48 GB",
+    cpu_speed: "Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz"
+  },
+  configuration: %Benchee.Configuration{
+    parallel: 1,
+    time: 10000000000.0,
+    warmup: 2000000000.0,
+    memory_time: 0.0,
+    reduction_time: 0.0,
+    pre_check: false,
+    formatters: [Benchee.Formatters.Console],
+    percentiles: ~c"2c",
+    print: %{configuration: true, benchmarking: true, fast_warning: true},
+    inputs: nil,
+    input_names: [],
+    save: false,
+    load: false,
+    unit_scaling: :best,
+    assigns: %{},
+    before_each: nil,
+    after_each: nil,
+    before_scenario: nil,
+    after_scenario: nil,
+    measure_function_call_overhead: false,
+    title: nil,
+    profile_after: false
+  },
+  scenarios: [
+    %Benchee.Scenario{
+      name: "Regular Elixir",
+      job_name: "Regular Elixir",
+      function: #Function<43.105768164/0 in :erl_eval.expr/6>,
+      input_name: :__no_input,
+      input: :__no_input,
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 1710261.227420737,
+          ips: 584.705999274807,
+          std_dev: 576730.1521382051,
+          std_dev_ratio: 0.3372175799178807,
+          std_dev_ips: 197.17314203891652,
+          median: 1520254.0,
+          percentiles: %{50 => 1520254.0, 99 => 3676853.4400000083},
+          mode: [1721270, 1482396, 1348662, 1325271, 1356482, 1548539, 1696843, 1188893, 1491108,
+           1259342, 1399715, 1379910, 1435965, 1465674, 1351406, 1279382, 1406775, 1194611, 1426727,
+           1577877],
+          minimum: 1033782,
+          maximum: 11743437,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 5835
+        },
+        samples: [2981069, 1655194, 1607540, 1191317, 1620118, 1458220, 1305420, 1760052, 1170151,
+         1111835, 1295381, 2137740, 1188370, 1115605, 1757425, 1835741, 1452424, 1501465, 1576387,
+         1636506, 2258286, 1234241, 1271135, 1707258, 1554145, 1499431, 1482538, 2180093, 1420894,
+         1358086, 2056817, 1313835, 1553544, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: nil,
+          ips: nil,
+          std_dev: nil,
+          std_dev_ratio: nil,
+          std_dev_ips: nil,
+          median: nil,
+          percentiles: nil,
+          mode: nil,
+          minimum: nil,
+          maximum: nil,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 0
+        },
+        samples: []
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: nil,
+          ips: nil,
+          std_dev: nil,
+          std_dev_ratio: nil,
+          std_dev_ips: nil,
+          median: nil,
+          percentiles: nil,
+          mode: nil,
+          minimum: nil,
+          maximum: nil,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 0
+        },
+        samples: []
+      }
+    },
+    %Benchee.Scenario{
+      name: "JIT with EXLA",
+      job_name: "JIT with EXLA",
+      function: #Function<43.105768164/0 in :erl_eval.expr/6>,
+      input_name: :__no_input,
+      input: :__no_input,
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 1782891.8511702698,
+          ips: 560.8865166687544,
+          std_dev: 596088.9073262475,
+          std_dev_ratio: 0.33433823085510295,
+          std_dev_ips: 187.52580569351258,
+          median: 1612039.0,
+          percentiles: %{50 => 1612039.0, 99 => 3630750.5999999964},
+          mode: [2068460, 1450950, 2040902, 1448901, 2231903, 1463791, 1453732, 1536762, 1454489,
+           2246181, 1608919, 1473998, 1539213, 1568341, 1399893, 1571859, 1405579, 1393762],
+          minimum: 1026654,
+          maximum: 18038179,
+          relative_more: 1.042467561437423,
+          relative_less: 0.9592624624416457,
+          absolute_difference: 72630.62374953274,
+          sample_size: 5597
+        },
+        samples: [2020672, 1448010, 1839839, 1801064, 1424197, 1592070, 2246181, 1584689, 1666085,
+         2730499, 2817241, 1920496, 2016588, 1793161, 1650883, 1370581, 2851021, 1784375, 1441456,
+         1640712, 2237028, 1499376, 1811949, 1749713, 1379148, 2340051, 1376591, 2373856, 1823143,
+         1712378, 1623710, 2034108, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: nil,
+          ips: nil,
+          std_dev: nil,
+          std_dev_ratio: nil,
+          std_dev_ips: nil,
+          median: nil,
+          percentiles: nil,
+          mode: nil,
+          minimum: nil,
+          maximum: nil,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 0
+        },
+        samples: []
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: nil,
+          ips: nil,
+          std_dev: nil,
+          std_dev_ratio: nil,
+          std_dev_ips: nil,
+          median: nil,
+          percentiles: nil,
+          mode: nil,
+          minimum: nil,
+          maximum: nil,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 0
+        },
+        samples: []
+      }
+    }
+  ]
+}
+```
+
+## Backend or Compiler?
+
+When working with Nx, you’ll encounter 2 fundamental ways of speeding up
+your code: backends and compilers. The relationship between backends and
+compilers is kind of like the relationship between interpreted programming
+languages and compiled programming languages.
+
+```elixir
+# To change the default backend (Nx.BinaryBackend)
+
+Nx.default_backend(EXLA.Backend)
+
+# Or configure your application with:
+# config :nx, default_backend: EXLA.Backend
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{Nx.BinaryBackend, []}
+```
+
+```elixir
+Benchee.run(
+  %{
+    "JIT with EXLA" => fn ->
+      apply(EXLA.jit(&Softmax.softmax/1), [tensor])
+    end,
+    "Regular Elixir" => fn ->
+      Softmax.softmax(tensor)
+    end
+  },
+  time: 10
+)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+Warning: the benchmark JIT with EXLA is using an evaluated function.
+  Evaluated functions perform slower than compiled functions.
+  You can move the Benchee caller to a function in a module and invoke `Mod.fun()` instead.
+  Alternatively, you can move the benchmark into a benchmark.exs file and run mix run benchmark.exs
+
+Warning: the benchmark Regular Elixir is using an evaluated function.
+  Evaluated functions perform slower than compiled functions.
+  You can move the Benchee caller to a function in a module and invoke `Mod.fun()` instead.
+  Alternatively, you can move the benchmark into a benchmark.exs file and run mix run benchmark.exs
+
+Operating System: Linux
+CPU Information: Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz
+Number of Available Cores: 12
+Available memory: 15.48 GB
+Elixir 1.16.3
+Erlang 26.1
+JIT enabled: true
+
+Benchmark suite executing with the following configuration:
+warmup: 2 s
+time: 10 s
+memory time: 0 ns
+reduction time: 0 ns
+parallel: 1
+inputs: none specified
+Estimated total run time: 24 s
+
+Benchmarking JIT with EXLA ...
+Benchmarking Regular Elixir ...
+Calculating statistics...
+Formatting results...
+
+Name                     ips        average  deviation         median         99th %
+JIT with EXLA         577.37        1.73 ms    ±31.43%        1.57 ms        3.44 ms
+Regular Elixir        575.45        1.74 ms    ±32.22%        1.55 ms        3.69 ms
+
+Comparison: 
+JIT with EXLA         577.37
+Regular Elixir        575.45 - 1.00x slower +0.00579 ms
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%Benchee.Suite{
+  system: %Benchee.System{
+    elixir: "1.16.3",
+    erlang: "26.1",
+    jit_enabled?: true,
+    num_cores: 12,
+    os: :Linux,
+    available_memory: "15.48 GB",
+    cpu_speed: "Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz"
+  },
+  configuration: %Benchee.Configuration{
+    parallel: 1,
+    time: 10000000000.0,
+    warmup: 2000000000.0,
+    memory_time: 0.0,
+    reduction_time: 0.0,
+    pre_check: false,
+    formatters: [Benchee.Formatters.Console],
+    percentiles: ~c"2c",
+    print: %{configuration: true, benchmarking: true, fast_warning: true},
+    inputs: nil,
+    input_names: [],
+    save: false,
+    load: false,
+    unit_scaling: :best,
+    assigns: %{},
+    before_each: nil,
+    after_each: nil,
+    before_scenario: nil,
+    after_scenario: nil,
+    measure_function_call_overhead: false,
+    title: nil,
+    profile_after: false
+  },
+  scenarios: [
+    %Benchee.Scenario{
+      name: "JIT with EXLA",
+      job_name: "JIT with EXLA",
+      function: #Function<43.105768164/0 in :erl_eval.expr/6>,
+      input_name: :__no_input,
+      input: :__no_input,
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 1731979.9009024645,
+          ips: 577.3739057127283,
+          std_dev: 544309.7395083508,
+          std_dev_ratio: 0.31427024021741423,
+          std_dev_ips: 181.45143604360578,
+          median: 1572499.0,
+          percentiles: %{50 => 1572499.0, 99 => 3438882.2799999993},
+          mode: [1331770, 1302688, 1398050, 1498275, 1333092, 1338144, 1356622, 1539322, 1658370,
+           1286149, 1430922, 1745531, 1425707, 1299750, 1287057, 1852163, 1265725, 1393050, 1412535,
+           2952972],
+          minimum: 1025729,
+          maximum: 14997060,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 5762
+        },
+        samples: [1866218, 1821070, 2148152, 1608856, 1900098, 1706073, 1976818, 1361205, 2571069,
+         1510479, 2074596, 1760730, 2159804, 1789109, 2197127, 1706956, 2172723, 1500596, 1498275,
+         1613028, 2211549, 1286505, 1423980, 1466785, 1892936, 2455618, 1358701, 2084654, 1676371,
+         1821688, 1491038, 1827284, 1861482, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: nil,
+          ips: nil,
+          std_dev: nil,
+          std_dev_ratio: nil,
+          std_dev_ips: nil,
+          median: nil,
+          percentiles: nil,
+          mode: nil,
+          minimum: nil,
+          maximum: nil,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 0
+        },
+        samples: []
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: nil,
+          ips: nil,
+          std_dev: nil,
+          std_dev_ratio: nil,
+          std_dev_ips: nil,
+          median: nil,
+          percentiles: nil,
+          mode: nil,
+          minimum: nil,
+          maximum: nil,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 0
+        },
+        samples: []
+      }
+    },
+    %Benchee.Scenario{
+      name: "Regular Elixir",
+      job_name: "Regular Elixir",
+      function: #Function<43.105768164/0 in :erl_eval.expr/6>,
+      input_name: :__no_input,
+      input: :__no_input,
+      before_each: nil,
+      after_each: nil,
+      before_scenario: nil,
+      after_scenario: nil,
+      tag: nil,
+      run_time_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: 1737774.6064774508,
+          ips: 575.44862047849,
+          std_dev: 559935.3412114265,
+          std_dev_ratio: 0.32221401965726804,
+          std_dev_ips: 185.41761311060398,
+          median: 1552039.0,
+          percentiles: %{50 => 1552039.0, 99 => 3689388.8800000018},
+          mode: [1259618, 1661115, 1447768, 1512509, 1674037, 1326656, 1417017, 1681667, 1728462,
+           1638424, 1341510, 1492555, 1313788],
+          minimum: 1032585,
+          maximum: 6394970,
+          relative_more: 1.003345711790285,
+          relative_less: 0.9966654446707951,
+          absolute_difference: 5794.705574986292,
+          sample_size: 5743
+        },
+        samples: [2332639, 1773267, 2060052, 1532064, 1928116, 1530261, 1911579, 2050789, 1340714,
+         1504318, 1958894, 2458125, 1387476, 1915621, 2451282, 1495201, 1279728, 2307249, 2201065,
+         1514542, 1978462, 1605166, 1397288, 1974946, 1636551, 2009421, 1383471, 2174490, 1681667,
+         1973152, 2202545, 1486678, ...]
+      },
+      memory_usage_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: nil,
+          ips: nil,
+          std_dev: nil,
+          std_dev_ratio: nil,
+          std_dev_ips: nil,
+          median: nil,
+          percentiles: nil,
+          mode: nil,
+          minimum: nil,
+          maximum: nil,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 0
+        },
+        samples: []
+      },
+      reductions_data: %Benchee.CollectionData{
+        statistics: %Benchee.Statistics{
+          average: nil,
+          ips: nil,
+          std_dev: nil,
+          std_dev_ratio: nil,
+          std_dev_ips: nil,
+          median: nil,
+          percentiles: nil,
+          mode: nil,
+          minimum: nil,
+          maximum: nil,
+          relative_more: nil,
+          relative_less: nil,
+          absolute_difference: nil,
+          sample_size: 0
+        },
+        samples: []
+      }
+    }
+  ]
+}
+```
