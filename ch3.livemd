@@ -1,0 +1,354 @@
+# Chapter 3. Harness the Power of Math
+
+```elixir
+Mix.install([
+{:nx, "~> 0.5"},
+{:exla, "~> 0.5"},
+{:kino, "~> 0.8"},
+{:stb_image, "~> 0.6"},
+{:vega_lite, "~> 0.1"},
+{:kino_vega_lite, "~> 0.1"}
+])
+```
+
+## Understanding Machine Learning Math
+
+Mathematics is the foundation of Machine Learning.
+
+Expert systems and logic-based approaches, generally centered around the
+idea that it should be possible to “create” intelligence from a finite set of rules and logical primitives.
+
+The foundation of machine learning are linear algebra, probability, and vector calculus.
+
+## Speaking the Language of Data
+
+```elixir
+Nx.default_backend(EXLA.Backend)
+```
+
+```elixir
+# The fundamental object in linear algebra is the vector. You can think of a
+# vector as a collection of numbers that map to some real-world properties.
+
+# Nx doesn’t explicitly differentiate between scalars, vectors, and matrices. 
+# Everything in Nx is a tensor. Vectors are represented as Nx tensors 
+# with a rank of 1, or a single-dimensional tensor.
+
+a = Nx.tensor([1, 2, 3])
+b = Nx.tensor([4.0, 5.0, 6.0])
+c = Nx.tensor([1, 0, 1], type: {:u, 8})
+IO.inspect a, label: :a
+IO.inspect b, label: :b
+IO.inspect c, label: :c
+```
+
+```elixir
+# Another object in linear algebra is the scalar. Scalars are just numbers.
+# that scalars are represented as 0-dimensional tensors.
+
+i_am_a_scalar = 5
+i_am_also_a_scalar = Nx.tensor(5)
+
+# Note: For readability,
+# it’s typically best not to wrap scalars in the tensor constructor.
+```
+
+```elixir
+# A two-dimensional array of numbers, or a package of vectors, 
+# is known as a matrix.
+
+goog_current_price = 2677.32
+goog_pe = 23.86
+goog_mkt_cap = 1760
+meta_current_price = 133.93
+meta_pe = 11.10
+meta_mkt_cap = 360
+
+stocks_matrix =
+  Nx.tensor([
+    [goog_current_price, goog_pe, goog_mkt_cap],
+    [meta_current_price, meta_pe, meta_mkt_cap]
+  ])
+
+IO.inspect(stocks_matrix)
+
+# In Nx, you can think of a matrix as
+# a tensor with rank-2, e.g., a tensor with two dimensions
+```
+
+## Important Operations in Linear Algebra
+
+```elixir
+# Vector Addition
+
+# For Nx vectors, vector addition computes an element-wise sum
+# that adds individual components of vectors to obtain a new vector.
+
+sales_day_1 = Nx.tensor([32, 10, 14])
+sales_day_2 = Nx.tensor([10, 24, 21])
+
+total_sales = Nx.add(sales_day_1, sales_day_2)
+
+# Vector addition is just an element-wise sum of rank-1 tensors.
+
+# This definition of addition also extends to matrices and other higher-
+# dimensional tensors in Nx.
+
+# Nx tensors also obey specific broadcasting rules. With broadcasting, you can conveniently
+# add vectors to scalars, vectors to matrices, scalars to matrices, and so on.
+
+```
+
+```elixir
+# Scalar Multiplication
+
+# In Nx, scalar multiplication is a broadcasted multiplication 
+# of a scalar and a vector.
+
+sales_day_1 = Nx.tensor([32, 10, 14])
+sales_day_2 = Nx.tensor([10, 24, 21])
+total_sales = Nx.add(sales_day_1, sales_day_2)
+keep_rate = 0.9
+unreturned_sales = Nx.multiply(keep_rate, total_sales)
+
+# Element-wise multiplication also generalizes out to higher-dimensional
+# tensors in Nx. However, it would not be correct to call the element-wise 
+# multiplication of two N-dimensional tensors a scalar multiplication.
+```
+
+```elixir
+# The Hadamard product is named after mathematician Jacques
+# Hadamard, who is recognized as one of the mathematicians who
+# originally described the properties of the operation.
+
+price_per_product = Nx.tensor([9.95, 10.95, 5.99])
+revenue_per_product = Nx.multiply(unreturned_sales, price_per_product)
+```
+
+```elixir
+# Transpose
+
+# The transpose of a matrix is a matrix that’s flipped along its diagonal, where
+# the rows and columns of the matrix are swapped.
+sales_matrix = Nx.tensor([
+[32, 10, 14],
+[10, 24, 21]
+])
+dbg(sales_matrix)
+Nx.transpose(sales_matrix)
+
+# Note: the rows and columns switch places.
+```
+
+```elixir
+# For vectors or one-dimensional tensors in Nx, the transpose operation
+# is an identity operation, returning the tensor identical to the input
+# tensor because Nx doesn’t differentiate between row-vectors
+# and column-vectors.
+
+vector = Nx.tensor([1, 2, 3])
+dbg(vector)
+Nx.transpose(vector)
+
+# If the distinction is important in your calculations, you can create 
+# a rank-2 tensor where one of the dimensions is 1.
+```
+
+```elixir
+# Linear Transformations
+
+# A linear transformation, also known as a linear map, is just a function that
+# maps inputs to outputs. Linear transformations are special because they
+# preserve linearity. 
+
+invert_color_channels = Nx.tensor([
+  [-1, 0, 0],
+[0, -1, 0],
+[0, 0, -1]
+])
+"/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/Cat.jpg"
+|> StbImage.read_file!()
+|> StbImage.resize(256, 256)
+|> StbImage.to_nx()
+|> Nx.dot(invert_color_channels)
+|> Nx.as_type({:u, 8})
+|> Kino.Image.new()
+
+# In Nx, matrix multiplications are done via the Nx.dot/2 operator.
+
+
+```
+
+```elixir
+# Vector-matrix and matrix-matrix dot products are computed according to the
+# rules of matrix multiplication.
+
+vector = Nx.dot(Nx.tensor([1, 2, 3]), Nx.tensor([1, 2, 3]))
+vector_matrix = Nx.dot(Nx.tensor([1, 2, 3]), Nx.tensor([[1], [2], [3]]))
+matrix_matrix = Nx.dot(Nx.tensor([[1, 2, 3], [4, 5, 6]]), Nx.tensor([[7, 8], [9, 10], [11, 12]]))
+vector |> IO.inspect(label: :vector)
+vector_matrix |> IO.inspect(label: :vector_matrix)
+matrix_matrix |> IO.inspect(label: :matrix_matrix)
+```
+
+## Thinking Probabilistically
+
+There are three primary tools used in machine learning to reason about data
+and make predictions: probability theory, decision theory, and information
+theory.
+
+## Reasoning About Uncertainty
+
+Machine learning shines in uncertain situations because uncertainty is
+a built-in assumption.
+
+Three sources of uncertainty that will pop up
+in every problem:
+
+* Inherent stochasticity.
+* Incomplete observability.
+* Incomplete modeling.
+
+Probability is a measure or quantification of uncertainty.
+
+```elixir
+simulation = fn key ->
+  {value, key} = Nx.Random.uniform(key)
+  if Nx.to_number(value) < 0.5, do: {0, key}, else: {1, key}
+end
+```
+
+```elixir
+key = Nx.Random.key(42)
+
+for n <- [10, 100, 1000, 10000] do
+  Enum.map_reduce(1..n, key, fn _, key -> simulation.(key) end)
+  |> elem(0)
+  |> Enum.sum()
+  |> IO.inspect()
+end
+```
+
+```elixir
+# All About Bayes
+
+# The bayesian perspective is fundamentally tied to available information, 
+# and probabilities are updated as more information becomes available.
+
+# Bayes Theorem describes the conditional probability of an event based on
+# available information or the occurence of another event. Bayes Theorem is a
+# rule that describes how probabilities should be updated in the face of new
+# evidence.
+```
+
+## Making Decisions
+
+Decision theory provides a framework for acting optimally in the presence of uncertainty. When making decisions in the presence of uncertainty, you first need to consider your goals.
+
+The rule, based on inference probabilities, represents a decision boundary.
+
+Depending on the application, it might make sense to take no action based on a given probability
+
+## Learning from Observations
+
+Information theory provides a framework for reasoning about information in systems.
+
+Information theory is the mathematical study of coding information in
+sequences and symbols and the study of how much information can be stored
+and transmitted in these mediums.
+
+## Tracking Change
+
+Vector calculus is concerned with the differentiation and integration of vector fields or functions.
+
+The most important concept from calculus to understand in machine learning
+(and to even understand in calculus) is the derivative. A derivative is a measure of the instantaneous rate of change of a function.
+
+Given a function, you can compute its derivative by hand to determine which
+input maximizes or minimizes the function.
+
+```elixir
+defmodule BerryFarm do
+  import Nx.Defn
+
+  defn profits(trees) do
+    -((trees - 1) ** 4) + trees ** 3 + trees ** 2
+  end
+
+  # defn profits(trees) do
+  #  trees
+  #  |> Nx.subtract(1)
+  #  |> Nx.pow(4)
+  #  |> Nx.negate()
+  #  |> Nx.add(Nx.pow(trees, 3))
+  #  |> Nx.add(Nx.pow(trees, 2))
+  # end
+
+  defn profits_derivative(trees) do
+    grad(trees, &profits/1)
+  end
+end
+```
+
+```elixir
+trees = Nx.linspace(0, 4, n: 100)
+profits = BerryFarm.profits(trees)
+profits_derivative = BerryFarm.profits_derivative(trees)
+alias VegaLite, as: Vl
+
+Vl.new(title: "Berry Profits", width: 740, height: 580)
+|> Vl.data_from_values(%{
+  trees: Nx.to_flat_list(trees),
+  profits: Nx.to_flat_list(profits),
+  profits_derivative: Nx.to_flat_list(profits_derivative)
+})
+|> Vl.layers([
+  Vl.new()
+  |> Vl.mark(:line, interpolate: :basis)
+  |> Vl.encode_field(:x, "trees", type: :quantitative)
+  |> Vl.encode_field(:y, "profits", type: :quantitative),
+  Vl.new()
+  |> Vl.mark(:line, interpolate: :basis)
+  |> Vl.encode_field(:x, "trees", type: :quantitative)
+  |> Vl.encode_field(:y, "profits_derivative", type: :quantitative)
+  |> Vl.encode(:color, value: "#ff0000")
+])
+
+# Note: grad/2 is an Nx function which is capable of taking the gradient of a
+# function 
+
+# The gradient is the direction of greatest change of a scalar function.
+```
+
+## Automatic Differentiation with defn
+
+```elixir
+# Automatic differentiation is the process of computing derivatives from pro-
+# grams.
+
+defmodule GradFun do
+  import Nx.Defn
+
+  # gradients are the direction of steepest change for scalar
+  # functions, so your function must return a scalar tensor.
+  # Additionally, gradients are only valid for continuous value functions, 
+  # so your function must return a floating-point type.
+  defn my_function(x) do
+    x
+    |> Nx.cos()
+    |> Nx.exp()
+    |> Nx.sum()
+    |> print_expr()
+  end
+  
+  defn grad_my_function(x) do
+    grad(x, &my_function/1) |> print_expr()
+  end
+end
+```
+
+```elixir
+GradFun.grad_my_function(Nx.tensor([1.0, 2.0, 3.0]))
+```
+
+Nx is actually executing a forward pass or evaluation trace of the original function given your inputs. Then recursively applies the chain-rule backwards through the forward trace to obtain the gradient of the original function. This backwards evaluation of the chain-rule is called backpropagation or reverse-mode automatic differentiation.

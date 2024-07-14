@@ -37,7 +37,7 @@ dbg(c)
 <!-- livebook:{"output":true} -->
 
 ```
-[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:ugq3xv5wuf2c55yp:4: (file)]
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:fu6f76jbumv4ttyy:4: (file)]
 a #=> #Nx.Tensor<
   s64[2][3]
   [
@@ -46,13 +46,13 @@ a #=> #Nx.Tensor<
   ]
 >
 
-[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:ugq3xv5wuf2c55yp:5: (file)]
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:fu6f76jbumv4ttyy:5: (file)]
 b #=> #Nx.Tensor<
   f32
   1.0
 >
 
-[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:ugq3xv5wuf2c55yp:6: (file)]
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:fu6f76jbumv4ttyy:6: (file)]
 c #=> #Nx.Tensor<
   f32[1][1][1][1][1][2]
   [
@@ -67,7 +67,6 @@ c #=> #Nx.Tensor<
     ]
   ]
 >
-
 
 ```
 
@@ -102,18 +101,17 @@ dbg(b)
 <!-- livebook:{"output":true} -->
 
 ```
-[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:qmd7fb5bvnbl4nck:3: (file)]
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:f3okcytc6d2vbddb:3: (file)]
 a #=> #Nx.Tensor<
   s64[3]
   [1, 2, 3]
 >
 
-[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:qmd7fb5bvnbl4nck:4: (file)]
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:f3okcytc6d2vbddb:4: (file)]
 b #=> #Nx.Tensor<
   f32[3]
   [1.0, 2.0, 3.0]
 >
-
 
 ```
 
@@ -210,13 +208,13 @@ b1 = Nx.tensor([[1, 2]])
 <!-- livebook:{"output":true} -->
 
 ```
-[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:w2rz7flewm4gwyqt:4: (file)]
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:7eudrssznnmfb2ay:4: (file)]
 a #=> #Nx.Tensor<
   s64[2]
   [1, 2]
 >
 
-[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:w2rz7flewm4gwyqt:5: (file)]
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:7eudrssznnmfb2ay:5: (file)]
 b #=> #Nx.Tensor<
   s64[2][2]
   [
@@ -225,7 +223,7 @@ b #=> #Nx.Tensor<
   ]
 >
 
-[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:w2rz7flewm4gwyqt:6: (file)]
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:7eudrssznnmfb2ay:6: (file)]
 c #=> #Nx.Tensor<
   s64[2][2][2]
   [
@@ -239,7 +237,6 @@ c #=> #Nx.Tensor<
     ]
   ]
 >
-
 
 ```
 
@@ -299,7 +296,7 @@ Nx.to_binary(a)
 <!-- livebook:{"output":true} -->
 
 ```
-[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:ualcrxj7pwnwbg6a:4: (file)]
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:burnywylbjdh5uxl:4: (file)]
 a #=> #Nx.Tensor<
   s64[2][3]
   [
@@ -307,7 +304,6 @@ a #=> #Nx.Tensor<
     [4, 5, 6]
   ]
 >
-
 
 ```
 
@@ -381,12 +377,11 @@ a
 <!-- livebook:{"output":true} -->
 
 ```
-[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:4w7uvom27vzkc6ab:4: (file)]
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:7zyupy2u6ueglpyc:4: (file)]
 a #=> #Nx.Tensor<
   s64[3]
   [1, 2, 3]
 >
-
 
 ```
 
@@ -448,9 +443,8 @@ Nx.abs(a)
 <!-- livebook:{"output":true} -->
 
 ```
-[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:iymo4kucyvfk6iw3:5: (file)]
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:ilkclhadh6qgmbgf:5: (file)]
 b #=> [1, 2, 3, 0, 1, 2, 3]
-
 
 ```
 
@@ -549,7 +543,7 @@ r = Nx.add(a, c)
 <!-- livebook:{"output":true} -->
 
 ```
-[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:vv73tsfhkbkq4yf3:13: (file)]
+[/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch2.livemd#cell:o6u7bok7dm557wiv:13: (file)]
 r #=> #Nx.Tensor<
   s64[2][3]
   [
@@ -557,7 +551,6 @@ r #=> #Nx.Tensor<
     [34, 35, 36]
   ]
 >
-
 
 ```
 
@@ -705,7 +698,11 @@ defmodule MyModule do
   # Just-in-time compilation means that a special version of
   # your function will be compiled when the function is invoked.
   defn adds_one(x) do
-    Nx.add(x, 1) |> print_expr()
+    Nx.add(x, 1) |> Nx.multiply(103) |> print_expr()
+  end
+
+  defn complex_one(x) do
+    Nx.add(x, 200) |> Nx.multiply(103) |> adds_one() |> print_expr()
   end
 end
 ```
@@ -713,7 +710,7 @@ end
 <!-- livebook:{"output":true} -->
 
 ```
-{:module, MyModule, <<70, 79, 82, 49, 0, 0, 9, ...>>, true}
+{:module, MyModule, <<70, 79, 82, 49, 0, 0, 11, ...>>, true}
 ```
 
 ```elixir
@@ -727,8 +724,9 @@ MyModule.adds_one(Nx.tensor([1, 2, 3]))
   s64[3]
   
   Nx.Defn.Expr
-  parameter a:0   s64[3]
-  b = add 1, a    s64[3]
+  parameter a:0         s64[3]
+  b = add 1, a          s64[3]
+  c = multiply 103, b   s64[3]
 >
 ```
 
@@ -737,7 +735,45 @@ MyModule.adds_one(Nx.tensor([1, 2, 3]))
 ```
 #Nx.Tensor<
   s64[3]
-  [2, 3, 4]
+  [206, 309, 412]
+>
+```
+
+```elixir
+MyModule.complex_one(Nx.tensor([1, 2, 3]))
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64[3]
+  
+  Nx.Defn.Expr
+  parameter a:0         s64[3]
+  b = add 1, a          s64[3]
+  c = multiply 103, b   s64[3]
+  d = add 1, c          s64[3]
+  e = multiply 103, d   s64[3]
+>
+#Nx.Tensor<
+  s64[3]
+  
+  Nx.Defn.Expr
+  parameter a:0         s64[3]
+  b = add 1, a          s64[3]
+  c = multiply 103, b   s64[3]
+  d = add 1, c          s64[3]
+  e = multiply 103, d   s64[3]
+>
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64[3]
+  [21321, 31930, 42539]
 >
 ```
 
