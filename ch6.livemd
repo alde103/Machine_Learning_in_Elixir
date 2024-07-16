@@ -1,0 +1,40 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Chapter 6. Go Deep with Axon
+
+## Understanding the need for Deep Learning
+
+Traditional machine learning algorithms require heavy investment in discovering rich-enough representations of the data prior to the learning process.
+
+The ability to extract representations from high-dimensional inputs—and learn to make predictions from those representations—is the draw of deep learning.
+
+<!-- livebook:{"break_markdown":true} -->
+
+**The Curse of Dimensionality**
+
+Complex inputs, such as images, audio, and text, are often represented in high-dimensional space.
+
+The complexity of a machine learning problem increases significantly as the dimensionality of the 
+inputs increase.
+
+As the number of dimensions of the input space increases, the quality of the model increases too. However, at a certain point, the dimensionality becomes too high, and the quality of the model diminishes. This phenomenon is known as the curse of dimensionality.
+
+Deep learning is able to overcome the curse of dimensionality.
+
+**Cascading Representations**
+
+Neural networks transform inputs into hierarchical representations via composing linear and nonlinear transformations.
+
+A neural network has a series of layers, each of which takes the previous layer’s representation as input and transforms it into its own representation before finally outputting a prediction.
+
+More concretely, the theory of why deep learning works so well is that deep models are able to learn successive, hierarchical representations of input data.
+
+The first few layers extract simple relationships from the input data, while later layers start to extract more complex relationships from those simple relationships.
+
+**Representing Any Function**
+
+Neural networks are said to be universal function approximators. A universal approximator is a model that can approximate any complex function when given the correct parameters.
+
+```elixir
+
+```
