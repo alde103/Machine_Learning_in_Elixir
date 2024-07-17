@@ -4,7 +4,12 @@
 
 ```elixir
 Mix.install([
-{:nx, "~> 0.5"}
+{:axon, "~> 0.5"},
+{:nx, "~> 0.5"},
+{:exla, "~> 0.5"},
+{:scidata, "~> 0.1"},
+{:kino, "~> 0.8"},
+{:table_rex, "~> 3.1.1"}
 ])
 ```
 
@@ -174,4 +179,632 @@ NeuralNetwork.predict(input, w1, b1, w2, b2)
 >
 ```
 
-## Section
+## Creating Neural Networks with Axon
+
+Axon is a library for creating and training neural networks in Elixir, and is the primary tool for deep learning in the Elixir ecosystem. There’s a lot of boilerplate associated with creating neural networks in Nx. Axon abstracts all the boilerplate and offers a simplified API for building and training neural networks.
+
+```elixir
+# This ensures that all of your defn compiled code makes use of the EXLA
+# backend.
+Nx.default_backend(EXLA.Backend)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{Nx.BinaryBackend, []}
+```
+
+```elixir
+# Download MNIST Data
+{images, labels} = Scidata.MNIST.download()
+# Scidata is not designed to be Nx-aware.
+# The MNIST images are grayscale, with each pixel having a value between 0-255.
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{{<<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...>>, {:u, 8}, {60000, 1, 28, 28}},
+ {<<5, 0, 4, 1, 9, 2, 1, 3, 1, 4, 3, 5, 3, 6, 1, 7, 2, 8, 6, 9, 4, 0, 9, 1, 1, 2, 4, 3, 2, 7, 3, 8,
+    6, 9, 0, 5, 6, 0, 7, 6, 1, 8, 7, 9, 3, 9, 8, ...>>, {:u, 8}, {60000}}}
+```
+
+```elixir
+# Features preprocessing (normalization and one-hot shape)
+{image_data, image_type, image_shape} = images
+{label_data, label_type, label_shape} = labels
+
+images =
+  image_data
+  |> Nx.from_binary(image_type)
+  |> Nx.divide(255)
+  |> Nx.reshape({60000, :auto})
+
+labels =
+  label_data
+  |> Nx.from_binary(label_type)
+  |> Nx.reshape(label_shape)
+  |> Nx.new_axis(-1)
+  |> Nx.equal(Nx.iota({1, 10}))
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  u8[60000][10]
+  EXLA.Backend<host:0, 0.3353950222.3508666390.56238>
+  [
+    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    ...
+  ]
+>
+```
+
+```elixir
+# Split dataset
+train_range = 0..49_999//1
+test_range = 50_000..-1//1
+train_images = images[train_range]
+train_labels = labels[train_range]
+test_images = images[test_range]
+test_labels = labels[test_range]
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  u8[10000][10]
+  EXLA.Backend<host:0, 0.3353950222.3508666390.56246>
+  [
+    [0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+    [0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+    ...
+  ]
+>
+```
+
+```elixir
+# creating minibatches streams
+batch_size = 64
+
+train_data =
+  train_images
+  |> Nx.to_batched(batch_size)
+  |> Stream.zip(Nx.to_batched(train_labels, batch_size))
+
+test_data =
+  test_images
+  |> Nx.to_batched(batch_size)
+  |> Stream.zip(Nx.to_batched(test_labels, batch_size))
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Function<73.53678557/2 in Stream.zip_with/2>
+```
+
+```elixir
+# Building the Model
+
+model =
+  # a model that takes an input shape of {nil, 784}
+  Axon.input("images", shape: {nil, 784})
+  # hidden layer of 128 neurons. 
+  |> Axon.dense(128, activation: :relu)
+  # output layer of 10 outputs.
+  |> Axon.dense(10, activation: :softmax)
+
+# Axon allows you to use nil as a placeholder for values
+# that will be filled at inference time.
+
+# Note: If you pass an input with a shape that does not match what Axon expects, it
+# will raise an error.
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Axon<
+  inputs: %{"images" => {nil, 784}}
+  outputs: "softmax_0"
+  nodes: 5
+>
+```
+
+```elixir
+# Graphic display:
+template = Nx.template({1, 784}, :f32)
+Axon.Display.as_graph(model, template)
+```
+
+<!-- livebook:{"output":true} -->
+
+```mermaid
+graph TD;
+12[/"images (:input) {1, 784}"/];
+13["dense_0 (:dense) {1, 128}"];
+14["relu_0 (:relu) {1, 128}"];
+15["dense_1 (:dense) {1, 10}"];
+16["softmax_0 (:softmax) {1, 10}"];
+15 --> 16;
+14 --> 15;
+13 --> 14;
+12 --> 13;
+```
+
+```elixir
+# Model attributes using the console.
+Axon.Display.as_table(model, template)
+|> IO.puts
+
+# The description tells you layer names and inputs, layer shapes, trainable
+# parameters, and options in each layer.
+```
+
+<!-- livebook:{"output":true} -->
+
+```
++-----------------------------------------------------------------------------------------------------------+
+|                                                   Model                                                   |
++==================================+=============+==============+===================+=======================+
+| Layer                            | Input Shape | Output Shape | Options           | Parameters            |
++==================================+=============+==============+===================+=======================+
+| images ( input )                 | []          | {1, 784}     | shape: {nil, 784} |                       |
+|                                  |             |              | optional: false   |                       |
++----------------------------------+-------------+--------------+-------------------+-----------------------+
+| dense_0 ( dense["images"] )      | [{1, 784}]  | {1, 128}     |                   | kernel: f32[784][128] |
+|                                  |             |              |                   | bias: f32[128]        |
++----------------------------------+-------------+--------------+-------------------+-----------------------+
+| relu_0 ( relu["dense_0"] )       | [{1, 128}]  | {1, 128}     |                   |                       |
++----------------------------------+-------------+--------------+-------------------+-----------------------+
+| dense_1 ( dense["relu_0"] )      | [{1, 128}]  | {1, 10}      |                   | kernel: f32[128][10]  |
+|                                  |             |              |                   | bias: f32[10]         |
++----------------------------------+-------------+--------------+-------------------+-----------------------+
+| softmax_0 ( softmax["dense_1"] ) | [{1, 10}]   | {1, 10}      |                   |                       |
++----------------------------------+-------------+--------------+-------------------+-----------------------+
+Total Parameters: 101770
+Total Parameters Memory: 407080 bytes
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+:ok
+```
+
+```elixir
+# Check Axon Struct.
+
+IO.inspect model, structs: false
+
+# Axon models are just representations of computation graphs 
+# that you can manipulate and compose before passing to Axon’s execution 
+# and training APIs. You build the graph lazily and then use it when 
+# you need to.
+
+# It also allows Axon to convert to and from other neural network 
+# representations such as ONNX.
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%{
+  output: 16,
+  nodes: %{
+    12 => %{
+      args: [],
+      id: 12,
+      name: #Function<69.118803566/2 in Axon.name/2>,
+      parent: [],
+      mode: :both,
+      opts: [shape: {nil, 784}, optional: false],
+      op: :input,
+      stacktrace: [
+        {Axon, :layer, 3, [file: ~c"lib/axon.ex", line: 338]},
+        {:elixir, :eval_external_handler, 3,
+         [file: ~c"src/elixir.erl", line: 405]},
+        {:erl_eval, :do_apply, 7, [file: ~c"erl_eval.erl", line: 750]},
+        {:erl_eval, :expr_list, 7, [file: ~c"erl_eval.erl", line: 1026]},
+        {:erl_eval, :expr, 6, [file: ~c"erl_eval.erl", line: 456]},
+        {:erl_eval, :expr_list, 7, [file: ~c"erl_eval.erl", line: 1026]}
+      ],
+      __struct__: Axon.Node,
+      parameters: [],
+      hooks: [],
+      op_name: :input,
+      policy: %{
+        output: {:f, 32},
+        params: {:f, 32},
+        __struct__: Axon.MixedPrecision.Policy,
+        compute: {:f, 32}
+      }
+    },
+    13 => %{
+      args: [:layer, :parameter, :parameter],
+      id: 13,
+      name: #Function<68.118803566/2 in Axon.name/2>,
+      parent: ~c"\f",
+      mode: :both,
+      opts: [],
+      op: :dense,
+      stacktrace: [
+        {Axon, :layer, 3, [file: ~c"lib/axon.ex", line: 338]},
+        {Axon, :dense, 3, [file: ~c"lib/axon.ex", line: 816]},
+        {:elixir, :eval_external_handler, 3,
+         [file: ~c"src/elixir.erl", line: 405]},
+        {:erl_eval, :do_apply, 7, [file: ~c"erl_eval.erl", line: 750]},
+        {:erl_eval, :expr_list, 7, [file: ~c"erl_eval.erl", line: 1026]},
+        {:erl_eval, :expr, 6, [file: ~c"erl_eval.erl", line: 456]}
+      ],
+      __struct__: Axon.Node,
+      parameters: [
+        %{
+          name: "kernel",
+          type: {:f, 32},
+          __struct__: Axon.Parameter,
+          children: nil,
+          shape: #Function<28.118803566/1 in Axon.dense/3>,
+          initializer: #Function<3.127011656/3 in Axon.Initializers.glorot_uniform/1>,
+          frozen: false
+        },
+        %{
+          name: "bias",
+          type: {:f, 32},
+          __struct__: Axon.Parameter,
+          children: nil,
+          shape: #Function<29.118803566/1 in Axon.dense/3>,
+          initializer: #Function<23.127011656/2 in Axon.Initializers.zeros/0>,
+          frozen: false
+        }
+      ],
+      hooks: [],
+      op_name: :dense,
+      policy: %{
+        output: {:f, 32},
+        params: {:f, 32},
+        __struct__: Axon.MixedPrecision.Policy,
+        compute: {:f, 32}
+      }
+    },
+    14 => %{
+      args: [:layer],
+      id: 14,
+      name: #Function<68.118803566/2 in Axon.name/2>,
+      parent: ~c"\r",
+      mode: :both,
+      opts: [],
+      op: :relu,
+      stacktrace: [
+        {Axon, :layer, 3, [file: ~c"lib/axon.ex", line: 338]},
+        {:elixir, :eval_external_handler, 3,
+         [file: ~c"src/elixir.erl", line: 405]},
+        {:erl_eval, :do_apply, 7, [file: ~c"erl_eval.erl", line: 750]},
+        {:erl_eval, :expr_list, 7, [file: ~c"erl_eval.erl", line: 1026]},
+        {:erl_eval, :expr, 6, [file: ~c"erl_eval.erl", line: 456]},
+        {:erl_eval, :expr, 6, [file: ~c"erl_eval.erl", line: 494]}
+      ],
+      __struct__: Axon.Node,
+      parameters: [],
+      hooks: [],
+      op_name: :relu,
+      policy: %{
+        output: {:f, 32},
+        params: {:f, 32},
+        __struct__: Axon.MixedPrecision.Policy,
+        compute: {:f, 32}
+      }
+    },
+    15 => %{
+      args: [:layer, :parameter, :parameter],
+      id: 15,
+      name: #Function<68.118803566/2 in Axon.name/2>,
+      parent: [14],
+      mode: :both,
+      opts: [],
+      op: :dense,
+      stacktrace: [
+        {Axon, :layer, 3, [file: ~c"lib/axon.ex", line: 338]},
+        {Axon, :dense, 3, [file: ~c"lib/axon.ex", line: 816]},
+        {:elixir, :eval_external_handler, 3,
+         [file: ~c"src/elixir.erl", line: 405]},
+        {:erl_eval, :do_apply, 7, [file: ~c"erl_eval.erl", line: 750]},
+        {:erl_eval, :expr, 6, [file: ~c"erl_eval.erl", line: 494]},
+        {:elixir, :eval_forms, 4, [file: ~c"src/elixir.erl", line: 378]}
+      ],
+      __struct__: Axon.Node,
+      parameters: [
+        %{
+          name: "kernel",
+          type: {:f, 32},
+          __struct__: Axon.Parameter,
+          children: nil,
+          shape: #Function<28.118803566/1 in Axon.dense/3>,
+          initializer: #Function<3.127011656/3 in Axon.Initializers.glorot_uniform/1>,
+          frozen: false
+        },
+        %{
+          name: "bias",
+          type: {:f, 32},
+          __struct__: Axon.Parameter,
+          children: nil,
+          shape: #Function<29.118803566/1 in Axon.dense/3>,
+          initializer: #Function<23.127011656/2 in Axon.Initializers.zeros/0>,
+          frozen: false
+        }
+      ],
+      hooks: [],
+      op_name: :dense,
+      policy: %{
+        output: {:f, 32},
+        params: {:f, 32},
+        __struct__: Axon.MixedPrecision.Policy,
+        compute: {:f, 32}
+      }
+    },
+    16 => %{
+      args: [:layer],
+      id: 16,
+      name: #Function<68.118803566/2 in Axon.name/2>,
+      parent: [15],
+      mode: :both,
+      opts: [],
+      op: :softmax,
+      stacktrace: [
+        {Axon, :layer, 3, [file: ~c"lib/axon.ex", line: 338]},
+        {:elixir, :eval_external_handler, 3,
+         [file: ~c"src/elixir.erl", line: 405]},
+        {:erl_eval, :do_apply, 7, [file: ~c"erl_eval.erl", line: 750]},
+        {:erl_eval, :expr, 6, [file: ~c"erl_eval.erl", line: 494]},
+        {:elixir, :eval_forms, 4, [file: ~c"src/elixir.erl", line: 378]},
+        {Module.ParallelChecker, :verify, 1,
+         [file: ~c"lib/module/parallel_checker.ex", line: 112]}
+      ],
+      __struct__: Axon.Node,
+      parameters: [],
+      hooks: [],
+      op_name: :softmax,
+      policy: %{
+        output: {:f, 32},
+        params: {:f, 32},
+        __struct__: Axon.MixedPrecision.Policy,
+        compute: {:f, 32}
+      }
+    }
+  },
+  __struct__: Axon
+}
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Axon<
+  inputs: %{"images" => {nil, 784}}
+  outputs: "softmax_0"
+  nodes: 5
+>
+```
+
+```elixir
+# Training the model
+
+# Axon’s training abstraction lies in the Axon.Loop module. Axon.Loop contains
+# functions for building up an %Axon.Loop{} data structure, which you can then
+# run on input data using Axon.Loop.run/3.
+
+trained_model_state =
+  model
+  |> Axon.Loop.trainer(:categorical_cross_entropy, :sgd)
+  |> Axon.Loop.metric(:accuracy)
+  |> Axon.Loop.run(train_data, %{}, epochs: 15, compiler: EXLA)
+
+# Axon.Loop.trainer/3 is a factory function for a supervised training loop 
+# that takes an Axon model, loss function, and optimizer as input.
+
+# The Axon struct is a stateless representation of a neural network, 
+# It does not carry any of the model parameters or state internally.
+
+# when performing inference and evaluation, you always need
+# access to both the model and a model state compatible with the given model.
+
+# The model state is really just a nested map of namespaces and parameters.
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+
+00:25:43.627 [debug] Forwarding options: [compiler: EXLA] to JIT compiler
+Epoch: 0, Batch: 750, accuracy: 0.7678509 loss: 0.9629547
+Epoch: 1, Batch: 768, accuracy: 0.8820302 loss: 0.6991112
+Epoch: 2, Batch: 736, accuracy: 0.8973244 loss: 0.5938520
+Epoch: 3, Batch: 754, accuracy: 0.9057121 loss: 0.5283161
+Epoch: 4, Batch: 772, accuracy: 0.9117885 loss: 0.4847525
+Epoch: 5, Batch: 740, accuracy: 0.9161817 loss: 0.4547541
+Epoch: 6, Batch: 758, accuracy: 0.9206398 loss: 0.4295540
+Epoch: 7, Batch: 776, accuracy: 0.9239663 loss: 0.4093308
+Epoch: 8, Batch: 744, accuracy: 0.9277894 loss: 0.3932339
+Epoch: 9, Batch: 762, accuracy: 0.9309469 loss: 0.3783651
+Epoch: 10, Batch: 780, accuracy: 0.9331387 loss: 0.3655895
+Epoch: 11, Batch: 748, accuracy: 0.9356642 loss: 0.3547653
+Epoch: 12, Batch: 766, accuracy: 0.9383761 loss: 0.3444068
+Epoch: 13, Batch: 734, accuracy: 0.9401785 loss: 0.3356143
+Epoch: 14, Batch: 752, accuracy: 0.9423141 loss: 0.3270106
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%{
+  "dense_0" => %{
+    "bias" => #Nx.Tensor<
+      f32[128]
+      EXLA.Backend<host:0, 0.3353950222.3508666391.239334>
+      [-0.03003089874982834, -8.404723485000432e-4, 0.043046995997428894, 0.001848248764872551, 0.025173818692564964, -0.02629633992910385, -0.043340303003787994, 0.06448271125555038, -0.006389632821083069, 0.017144815996289253, 0.01419195905327797, 0.034702446311712265, 0.0038450390566140413, 0.010193378664553165, 0.031070437282323837, 0.03853145241737366, 0.054759807884693146, -0.12287123501300812, 0.10074027627706528, -0.0018979876767843962, 0.022094083949923515, 0.09139977395534515, 0.04247134178876877, 0.02099713496863842, -0.07586012780666351, -0.008592991158366203, 0.017909761518239975, 0.042523182928562164, 0.06152050942182541, -0.009530077688395977, 0.006905101239681244, 0.009240574203431606, 0.004952537827193737, 0.007435427512973547, -0.02322331815958023, 0.07470828294754028, 0.08175764977931976, 0.02554883249104023, 0.08358795195817947, 0.025551527738571167, 0.0219684150069952, -0.00814815517514944, -0.0696113258600235, 0.05470246076583862, 0.05028221756219864, -0.05115347355604172, 0.013859338127076626, 0.013462912291288376, ...]
+    >,
+    "kernel" => #Nx.Tensor<
+      f32[784][128]
+      EXLA.Backend<host:0, 0.3353950222.3508666391.239335>
+      [
+        [-0.015571373514831066, 0.03507431969046593, -0.03024684078991413, 0.033542241901159286, -0.003990748431533575, -0.007201602216809988, 0.022195978090167046, 0.036017950624227524, -0.05298728868365288, 0.02949131280183792, -0.07036764174699783, 0.024941476061940193, 0.019485194236040115, 0.024200471118092537, -0.031565308570861816, -0.05488453060388565, 0.019244857132434845, -0.0034387751948088408, -0.013058342039585114, 0.07957087457180023, -0.03383438661694527, -0.07160386443138123, -0.008871039375662804, -0.025272876024246216, -0.035251304507255554, 0.03952052444219589, -0.04019666835665703, 0.014928026124835014, 0.028715210035443306, -0.043587811291217804, -0.05158976837992668, -0.012218710966408253, -0.040084369480609894, -0.05356656759977341, -0.01756451278924942, -0.006900562904775143, 0.019565602764487267, 0.038308631628751755, 0.04900435358285904, -0.05945444107055664, 0.07873693108558655, 0.06505365669727325, -0.04547068476676941, 0.030647046864032745, 0.023363005369901657, -0.041233643889427185, 0.060860879719257355, ...],
+        ...
+      ]
+    >
+  },
+  "dense_1" => %{
+    "bias" => #Nx.Tensor<
+      f32[10]
+      EXLA.Backend<host:0, 0.3353950222.3508666391.239336>
+      [-0.06092044711112976, 0.11269301921129227, -0.04284600540995598, -0.05762938782572746, -0.010255064815282822, 0.24869829416275024, -0.010373217053711414, 0.10326752066612244, -0.2742317020893097, -0.008402501232922077]
+    >,
+    "kernel" => #Nx.Tensor<
+      f32[128][10]
+      EXLA.Backend<host:0, 0.3353950222.3508666391.239337>
+      [
+        [0.027838703244924545, -0.2634117007255554, -0.06201697885990143, 0.18031375110149384, -0.19434916973114014, 0.13424459099769592, -0.2485136240720749, 0.21037498116493225, 0.23860721290111542, 0.07127895206212997],
+        [-0.2571846842765808, 0.07042337208986282, -0.089194156229496, -0.18094037473201752, 0.39518097043037415, -0.4027714431285858, 0.25180351734161377, -0.0018810316687449813, 0.0061933621764183044, 0.23171138763427734],
+        [-0.13548226654529572, 0.18577128648757935, -0.06604645401239395, 0.3596780300140381, 0.059766627848148346, -0.30783239006996155, -0.2243257611989975, 0.18009360134601593, -0.29971250891685486, -0.18198807537555695],
+        [0.12869718670845032, -0.03858882561326027, -0.11474230885505676, 0.07430493086576462, -0.045538607984781265, 0.06999959796667099, -0.022758005186915398, -0.07593285292387009, 0.011504793539643288, -0.02491634339094162],
+        [0.020836755633354187, -0.21495173871517181, 0.1629934310913086, 0.014419792219996452, -0.24647848308086395, -0.09021111577749252, ...],
+        ...
+      ]
+    >
+  }
+}
+```
+
+```elixir
+# Evaluating the Model
+
+model
+|> Axon.Loop.evaluator()
+|> Axon.Loop.metric(:accuracy)
+|> Axon.Loop.run(test_data, trained_model_state, compiler: EXLA)
+
+# Axon.Loop.evaluator/2 is a factory function, which creates a 
+# supervised evaluation loop using an Axon model and a model state.
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+
+00:30:01.194 [debug] Forwarding options: [compiler: EXLA] to JIT compiler
+Batch: 156, accuracy: 0.9453623
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%{
+  0 => %{
+    "accuracy" => #Nx.Tensor<
+      f32
+      EXLA.Backend<host:0, 0.3353950222.3508666391.242190>
+      0.9453622698783875
+    >
+  }
+}
+```
+
+```elixir
+# Executing Models with Axon
+
+{test_batch, _} = Enum.at(test_data, 0)
+
+# take a single image_data
+
+test_image = test_batch[2]
+
+# Visualize the image
+test_image
+|> Nx.reshape({28, 28})
+|> Nx.to_heatmap()
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Heatmap<
+  f32[28][28]
+  
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+  　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+>
+```
+
+```elixir
+# The easiest way to query your model for predictions is to first build
+# your model using Axon.build/2 and then call the returned predict function.
+
+# Axon.build/2 -> {init_fn, predict_fn}
+
+# init_fn is an arity-2 function which can be used to initialize 
+# your model’s parameters.
+# predict_fn is an arity-2 function which takes parameters 
+# and an input as input.
+
+{_, predict_fn} = Axon.build(model, compiler: EXLA)
+
+probabilities =
+test_image
+|> Nx.new_axis(0)
+|> then(&predict_fn.(trained_model_state, &1))
+
+# Note: Axon requires input shapes to be somewhatstatic, and to 
+# match the form you specified during model creation.
+
+probabilities |> Nx.argmax()
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  s64
+  EXLA.Backend<host:0, 0.3353950222.3508666391.242213>
+  6
+>
+```
