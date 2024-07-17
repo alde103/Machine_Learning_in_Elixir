@@ -2,6 +2,12 @@
 
 # Chapter 6. Go Deep with Axon
 
+```elixir
+Mix.install([
+{:nx, "~> 0.5"}
+])
+```
+
 ## Understanding the need for Deep Learning
 
 Traditional machine learning algorithms require heavy investment in discovering rich-enough representations of the data prior to the learning process.
@@ -35,6 +41,137 @@ The first few layers extract simple relationships from the input data, while lat
 
 Neural networks are said to be universal function approximators. A universal approximator is a model that can approximate any complex function when given the correct parameters.
 
+## Breaking Down a Neural Network
+
+**Getting the Terminology Right**
+
+Deep learning refers to a subset of machine learning algorithms that make use of deep models, or artificial neural networks.
+
+ANNs are named for their brain-inspired design. Multi-layer perceptrons (MLPs) are a class of deep learning models that make use of fully connected layers or densely connected layers, also see them referred to as feedforward networks because information flows from previous layers forward toward output layers.
+
+Misc: In the past, researchers working on deep learning were referred to as connectionists.
+
+**The Anatomy of a Neural Network**
+
+The most common abstraction for a unit of a computation or work in a neural
+network is a layer.
+
+A layer represents a transformation of the input which is to be forwarded to the next layer. The number of layers in the model is referred to as the *depth* of the model.
+
+Generally, increasing the depth of the model also increases the capacity of the model. However, at a certain point, making a model too deep can hinder the learning process.
+
+**Input Layers**
+
+Input layers are really just placeholders for model inputs.
+
+**Hidden Layers**
+
+Hidden layers are intermediate layers of computation which transform the input into a useful representation for the output layer.
+
+The most common hidden layer is the densely connected, fully connected, or simply dense layer:
+
+* The dense layer is named for the dense connections it creates between two layers.
+* Dense layers have a number of output units (neurons).
+* Dense layers learn to project inputs in such a way that extracts a useful representation for successive layers.
+
+The number of units in a dense layer is referred to as the *width* of the layer.
+
+**Activations**
+
+Hidden layers often times have an activation function that applies a nonlinear function to the output.
+
+The introduction of nonlinearities into the neural network are what makes it a universal approximator.
+
+Because neural networks are trained with gradient descent, it’s important that activation functions be differentiable.
+
+**ReLU**: Rectified Linear Unit (ReLU) takes all negative inputs to 0, and maps positive inputs to the same value.
+
+**Sigmoid**: is a popular output activation because it squeezes outputs to the range 0-1.
+
+**Softmax**: is a popular output activation for multi-class classification problems. It outputs a categorical probability distribution.
+
+**Output Layers**
+
+Output layers are the final result of your neural network.
+
+After transforming your inputs into useful representations with hidden layers, output layers transform those representations into something you can meaningfully use or interpret, such as a probability.
+
+**Using Nx to Create a Simple Neural Network**
+
 ```elixir
+defmodule NeuralNetwork do
+  import Nx.Defn
+
+  defn dense(input, weight, bias) do
+    input
+    |> Nx.dot(weight)
+    |> Nx.add(bias)
+  end
+
+  defn activation(input) do
+    Nx.sigmoid(input)
+  end
+
+  defn hidden(input, weight, bias) do
+    input
+    |> dense(weight, bias)
+    |> activation()
+  end
+
+  defn output(input, weight, bias) do
+    input
+    |> dense(weight, bias)
+    |> activation()
+  end
+
+  defn predict(input, w1, b1, w2, b2) do
+    input
+    |> hidden(w1, b1)
+    |> output(w2, b2)
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
 
 ```
+{:module, NeuralNetwork, <<70, 79, 82, 49, 0, 0, 18, ...>>, true}
+```
+
+```elixir
+key = Nx.Random.key(42)
+{w1, new_key} = Nx.Random.uniform(key)
+{b1, new_key} = Nx.Random.uniform(new_key)
+{w2, new_key} = Nx.Random.uniform(new_key)
+{b2, new_key} = Nx.Random.uniform(new_key)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{#Nx.Tensor<
+   f32
+   0.6716941595077515
+ >,
+ #Nx.Tensor<
+   u32[2]
+   [4249898905, 2425127087]
+ >}
+```
+
+```elixir
+{input, _new_key} = Nx.Random.uniform(new_key, shape: {})
+
+NeuralNetwork.predict(input, w1, b1, w2, b2)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Nx.Tensor<
+  f32
+  0.6635995507240295
+>
+```
+
+## Section
