@@ -1,0 +1,402 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Chapter 7. Learn to See
+
+```elixir
+Mix.install([
+{:axon, "~> 0.5"},
+{:nx, "~> 0.5"},
+{:exla, "~> 0.5"},
+{:stb_image, "~> 0.6"},
+{:kino, "~> 0.8"}
+])
+```
+
+## Identifying Cats and Dogs
+
+Download the data set at: [KAGGLE.com](https://www.kaggle.com/competitions/dogs-vs-cats/data)
+
+```elixir
+# Lets speed up
+Nx.global_default_backend(EXLA.Backend)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{EXLA.Backend, []}
+```
+
+## Building an Input Pipeline
+
+Elixir streams are often more performant as training input pipelines, especially when using an accelerator, such as a GPU. And have the following
+advantage:
+
+**Memory Efficiency**
+
+Practical datasets are often too large to fit entirely in memory. Streams only yield results when requested, which means you can consume batches of images one-by-one and avoid loading an entire dataset into memory.
+
+**Overlapping Execution**
+
+When using an external accelerator, such as a GPU, for training, the CPU is often idle for long periods of time as its only responsibility is feeding inputs to the GPU. GPUs are so fast that data transfer is often the most
+expensive operation.
+
+GPU starvation happens when the input pipeline is IO-bound rather than compute bound.
+
+You can combine streams with some of Elixir’s concurrency primitives to create pipelines that maximize both the GPU and CPU usage.
+
+```elixir
+# Lazy pipeline
+
+defmodule CatsAndDogs do
+  def pipeline(paths, batch_size, target_height, target_width) do
+    paths
+    |> Enum.shuffle()
+    |> Task.async_stream(&parse_image/1)
+    |> Stream.filter(fn
+      {:ok, {%StbImage{}, _}} -> true
+      _ -> false
+    end)
+    |> Stream.map(&to_tensors(&1, target_height, target_width))
+    |> Stream.chunk_every(batch_size, batch_size, :discard)
+    |> Stream.map(fn chunks ->
+      {img_chunk, label_chunk} = Enum.unzip(chunks)
+      # to stack the list of tensors into a single tensor.
+      {Nx.stack(img_chunk), Nx.stack(label_chunk)}
+    end)
+  end
+
+  defp parse_image(path) do
+    label = if String.contains?(path, "cat."), do: 0, else: 1
+
+    case StbImage.read_file(path) do
+      {:ok, img} -> {img, label}
+      _error -> :error
+    end
+  end
+
+  defp to_tensors({:ok, {img, label}}, target_height, target_width) do
+    img_tensor =
+      img
+      |> StbImage.resize(target_height, target_width)
+      |> StbImage.to_nx()
+      |> Nx.transpose(axes: [2, 0, 1])
+      |> Nx.divide(255)
+
+    label_tensor = Nx.tensor([label])
+    {img_tensor, label_tensor}
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, CatsAndDogs, <<70, 79, 82, 49, 0, 0, 14, ...>>, {:to_tensors, 3}}
+```
+
+```elixir
+notebook_path = "/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir"
+
+target_height = 96
+target_width = 96
+batch_size = 128
+
+{test_paths, train_paths} =
+  notebook_path
+  |> Path.join("dogs-vs-cats")
+  |> Path.join("train/*.jpg")
+  |> Path.wildcard()
+  |> Enum.shuffle()
+  |> Enum.split(1000)
+
+train_pipeline =
+  CatsAndDogs.pipeline(
+    train_paths,
+    batch_size,
+    target_height,
+    target_width
+  )
+
+test_pipeline =
+  CatsAndDogs.pipeline(
+    test_paths,
+    batch_size,
+    target_height,
+    target_width
+  )
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Stream<[
+  enum: #Stream<[
+    enum: #Function<3.111167033/2 in Task.build_stream/3>,
+    funs: [#Function<40.53678557/1 in Stream.filter/2>, #Function<48.53678557/1 in Stream.map/2>,
+     #Function<3.53678557/1 in Stream.chunk_while/4>]
+  ]>,
+  funs: [#Function<48.53678557/1 in Stream.map/2>]
+]>
+```
+
+```elixir
+Enum.take(train_pipeline, 1)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[
+  {#Nx.Tensor<
+     f32[128][channels: 3][height: 96][width: 96]
+     EXLA.Backend<host:0, 0.3347821597.2719875095.144239>
+     [
+       [
+         [
+           [0.3843137323856354, 0.40784314274787903, 0.4941176474094391, 0.5686274766921997, 0.5529412031173706, 0.4627451002597809, 0.46666666865348816, 0.48627451062202454, 0.4941176474094391, 0.572549045085907, 0.572549045085907, 0.5843137502670288, 0.615686297416687, 0.5921568870544434, 0.5686274766921997, 0.5960784554481506, 0.5529412031173706, 0.4745098054409027, 0.4627451002597809, 0.46666666865348816, 0.45098039507865906, 0.38823530077934265, 0.40392157435417175, 0.364705890417099, 0.529411792755127, 0.6274510025978088, 0.5098039507865906, 0.5333333611488342, 0.529411792755127, 0.4588235318660736, 0.43529412150382996, 0.3960784375667572, 0.40784314274787903, 0.4156862795352936, 0.43921568989753723, 0.45098039507865906, 0.47843137383461, 0.4901960790157318, 0.5607843399047852, 0.5372549295425415, 0.48627451062202454, 0.4431372582912445, 0.5098039507865906, 0.4000000059604645, 0.21960784494876862, 0.21960784494876862, 0.21960784494876862, 0.21176470816135406, ...],
+           ...
+         ],
+         ...
+       ],
+       ...
+     ]
+   >,
+   #Nx.Tensor<
+     s64[128][1]
+     EXLA.Backend<host:0, 0.3347821597.2719875095.144368>
+     [
+       [1],
+       [1],
+       [0],
+       [0],
+       [0],
+       [0],
+       [1],
+       [1],
+       [0],
+       [1],
+       [1],
+       [0],
+       [1],
+       [1],
+       [0],
+       [1],
+       [0],
+       [0],
+       [0],
+       [1],
+       [0],
+       [0],
+       [1],
+       [0],
+       [0],
+       [1],
+       [1],
+       [1],
+       [0],
+       [0],
+       [1],
+       [0],
+       [0],
+       [1],
+       [1],
+       [0],
+       [0],
+       [1],
+       [0],
+       [1],
+       [0],
+       [0],
+       [0],
+       [1],
+       [0],
+       [0],
+       [0],
+       ...
+     ]
+   >}
+]
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## MLP
+
+```elixir
+mlp_model =
+  Axon.input("images", shape: {nil, target_height, target_width, 3})
+  # Axon.flatten takes a two or more dimensional input and flattens
+  # the trailing dimensions into a single dimension.
+  |> Axon.flatten()
+  |> Axon.dense(256, activation: :relu)
+  |> Axon.dense(128, activation: :relu)
+  |> Axon.dense(1, activation: :sigmoid)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Axon<
+  inputs: %{"images" => {nil, 96, 96, 3}}
+  outputs: "sigmoid_0"
+  nodes: 8
+>
+```
+
+```elixir
+mlp_trained_model_state =
+  mlp_model
+  # Since this is a binary classification problem, use :binary_cross_entropy.
+  # Adam is a gradientdescent based algorithm that makes slight adaptations
+  # to traditional gradient-descent to improve convergence.
+  |> Axon.Loop.trainer(:categorical_cross_entropy, :adam)
+  |> Axon.Loop.metric(:accuracy)
+  |> Axon.Loop.run(train_pipeline, %{}, epochs: 5, compiler: EXLA)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+
+01:00:03.740 [debug] Forwarding options: [compiler: EXLA] to JIT compiler
+Epoch: 0, Batch: 150, accuracy: 0.4987066 loss: 0.0024936
+Epoch: 1, Batch: 163, accuracy: 0.4977610 loss: 0.0010687
+Epoch: 2, Batch: 176, accuracy: 0.4979255 loss: 0.0006801
+Epoch: 3, Batch: 139, accuracy: 0.4976004 loss: 0.0005343
+Epoch: 4, Batch: 152, accuracy: 0.4987234 loss: 0.0004156
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%{
+  "dense_0" => %{
+    "bias" => #Nx.Tensor<
+      f32[256]
+      EXLA.Backend<host:0, 0.3347821597.2723807255.82494>
+      [-2.872542622265272e-15, -2.677069963673755e-18, 0.006001490168273449, -0.006005452014505863, 0.006005449686199427, 0.0, 0.006005264353007078, -0.006005435716360807, 0.006005304865539074, 0.006005460862070322, 0.006005456205457449, 0.006005454808473587, 0.00600544735789299, 0.006005445495247841, 0.006005443632602692, 0.006005429662764072, 0.006005453411489725, 0.006005456205457449, -0.006005456671118736, 0.006005283445119858, 0.006005418486893177, -0.006005444563925266, 0.006005418486893177, -0.006005459930747747, 0.006005448754876852, -0.006005308125168085, 0.00600528996437788, -0.006005456205457449, -0.006005423609167337, -0.0060050711035728455, -0.00600543012842536, 0.006005392875522375, 0.006005417555570602, 0.006005373317748308, 0.006005453877151012, -0.006005438975989819, 0.00600539380684495, 0.006005054339766502, 0.0, -0.0060054543428123, -0.006005408242344856, 0.0, -0.006005449220538139, 0.0, -0.006005454808473587, -0.006005446892231703, 0.006005452014505863, -0.006005458068102598, ...]
+    >,
+    "kernel" => #Nx.Tensor<
+      f32[27648][256]
+      EXLA.Backend<host:0, 0.3347821597.2723807255.82495>
+      [
+        [-0.0040790303610265255, -0.011861296370625496, -0.011746843345463276, -0.003016725182533264, 0.02019592374563217, -6.052394164726138e-4, -0.007077507209032774, -0.009048323146998882, 0.0025951929856091738, -0.008510063402354717, 0.002264060080051422, 0.012012246064841747, 0.01665058545768261, 0.00955267809331417, 0.0063570053316652775, 0.004197435919195414, 0.003982984460890293, 0.011996046639978886, -0.00915535632520914, 8.089385810308158e-4, -0.007051660679280758, 0.002223733812570572, 0.005710991099476814, 0.00853954628109932, 0.008614988066256046, -0.0031679023522883654, -0.007014275062829256, 0.0013735267566516995, -0.010718457400798798, -0.011449151672422886, -0.008180731907486916, 0.002115727635100484, 0.006519697140902281, 4.571720492094755e-4, -0.005118849687278271, -6.618971237912774e-4, 0.016663042828440666, -0.007159420754760504, 0.01007820013910532, 2.659521996974945e-4, 0.001145441085100174, 0.006058008875697851, 4.821323382202536e-4, -0.004656947683542967, 0.005866022780537605, 0.0016239398391917348, 0.011373105458915234, ...],
+        ...
+      ]
+    >
+  },
+  "dense_1" => %{
+    "bias" => #Nx.Tensor<
+      f32[128]
+      EXLA.Backend<host:0, 0.3347821597.2723807255.82496>
+      [-1.98629876990708e-8, -0.006005453877151012, 0.006005347706377506, 0.0, -0.006005458068102598, 0.006005460396409035, -1.800947302399436e-8, 0.006005452014505863, -0.006005460862070322, 0.006005417555570602, 0.006005426868796349, -0.006005455274134874, -0.006005387753248215, -0.006005456671118736, 0.006005455274134874, 0.006005158647894859, -0.006005436647683382, 0.00600426783785224, -0.006005364470183849, -0.006005056202411652, 0.006005437113344669, -0.006005451083183289, -0.0060054543428123, -0.0060052345506846905, 0.005995164159685373, 0.006005457602441311, -0.006005437579005957, 0.006005460862070322, -0.006005445029586554, 0.006005458999425173, 0.006005409173667431, -0.006005459930747747, 0.006005459930747747, -0.006005458999425173, -0.0060054585337638855, 0.0060054585337638855, -0.006005456671118736, 0.00600545946508646, 9.816082169322726e-9, -0.006005459930747747, -0.006005446892231703, 0.006005458999425173, 0.006005450617522001, 0.006005244795233011, -0.006005431525409222, -0.006005459930747747, 0.006005448289215565, ...]
+    >,
+    "kernel" => #Nx.Tensor<
+      f32[256][128]
+      EXLA.Backend<host:0, 0.3347821597.2723807255.82497>
+      [
+        [-0.09050536155700684, 0.02694806456565857, -0.09827765822410583, -0.08923366665840149, 0.03198269009590149, -0.07045251131057739, -0.09775650501251221, -0.0010725855827331543, -0.04449620842933655, -0.045294374227523804, 0.10849016904830933, 0.0064559876918792725, 0.04240763187408447, 0.08059793710708618, 0.013824373483657837, 0.10680007934570312, -0.04602611064910889, 0.006300747394561768, 0.039136290550231934, 0.06857040524482727, 0.11111623048782349, 0.12125876545906067, 0.057926177978515625, 0.10145041346549988, 0.0283738374710083, -0.050323039293289185, -0.10740697383880615, 0.07511025667190552, 0.11721435189247131, 0.1062254011631012, 0.08559682965278625, 0.03438141942024231, -0.11335533857345581, -0.08361542224884033, -0.03491401672363281, -0.09456267952919006, 0.06015419960021973, -0.024346977472305298, -0.054090529680252075, -0.04451727867126465, -0.07727870345115662, 0.10854965448379517, 0.03907284140586853, -0.07630863785743713, -0.1196814775466919, -0.121509850025177, ...],
+        ...
+      ]
+    >
+  },
+  "dense_2" => %{
+    "bias" => #Nx.Tensor<
+      f32[1]
+      EXLA.Backend<host:0, 0.3347821597.2723807255.82498>
+      [0.006005463656038046]
+    >,
+    "kernel" => #Nx.Tensor<
+      f32[128][1]
+      EXLA.Backend<host:0, 0.3347821597.2723807255.82499>
+      [
+        [-0.21408851444721222],
+        [-0.05694381520152092],
+        [0.19099660217761993],
+        [-0.11774542182683945],
+        [-0.08252287656068802],
+        [0.13853661715984344],
+        [-0.1941109001636505],
+        [0.1279127299785614],
+        [-0.1879405975341797],
+        [0.04925248771905899],
+        [0.02206360548734665],
+        [-0.10648767650127411],
+        [-0.15599845349788666],
+        [-0.11188051849603653],
+        [0.1504119336605072],
+        [0.12392165511846542],
+        [-0.019523972645401955],
+        [0.04072601720690727],
+        [-0.09392765164375305],
+        [-0.01712111569941044],
+        [0.0368802472949028],
+        [-0.16540861129760742],
+        [-0.18583504855632782],
+        [-0.1841309517621994],
+        [0.009798694401979446],
+        [0.09658096730709076],
+        [-0.045408621430397034],
+        [0.2211829274892807],
+        [-0.14785230159759521],
+        [0.13986331224441528],
+        [0.12327084690332413],
+        [-0.1726800501346588],
+        [0.1323537677526474],
+        [-0.15824267268180847],
+        [-0.10378176718950272],
+        [0.10741936415433884],
+        [-0.06700964272022247],
+        [0.1452302485704422],
+        [0.10699773579835892],
+        [-0.15934349596500397],
+        [-0.16734625399112701],
+        [0.15101900696754456],
+        [0.12254317849874496],
+        [0.040428198873996735],
+        [-0.036617666482925415],
+        ...
+      ]
+    >
+  }
+}
+```
+
+```elixir
+mlp_model
+|> Axon.Loop.evaluator()
+|> Axon.Loop.metric(:accuracy)
+|> Axon.Loop.run(test_pipeline, mlp_trained_model_state, compiler: EXLA)
+# Recent advances in deep learning have suggested that adding more
+# capacity to a model might have a direct positive correlation to
+# model performance. Scaling the right model will lead to better performance.
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+
+01:02:59.022 [debug] Forwarding options: [compiler: EXLA] to JIT compiler
+Batch: 6, accuracy: 0.5323661
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%{
+  0 => %{
+    "accuracy" => #Nx.Tensor<
+      f32
+      EXLA.Backend<host:0, 0.3347821597.2723807255.87916>
+      0.5323660969734192
+    >
+  }
+}
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Introducing Convolutional Neural Networks
+
+Convolutional neural networks are neural networks that replace traditional matrix multiplications in dense layers with convolution operations.
