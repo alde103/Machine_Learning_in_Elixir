@@ -1,0 +1,962 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Chapter 8. Stop Reinventing the Wheel
+
+```elixir
+Mix.install([
+{:axon_onnx, github: "elixir-nx/axon_onnx"},
+{:axon, "~> 0.5"},
+{:nx, "~> 0.5"},
+{:exla, "~> 0.5"},
+{:stb_image, "~> 0.6"},
+{:kino, "~> 0.8"},
+])
+
+Nx.global_default_backend(EXLA.Backend)
+```
+
+## Identifying Cats and Dogs Again
+
+The :axon_onnx package is a library for importing and exporting Open Neural Network Exchange (ONNX) models to and from Axon.
+
+ONNX is a language agnostic model serialization protocol, which makes
+it perfect for bringing pre-trained models from the Python ecosystem into the
+world of Elixir.
+
+```elixir
+defmodule CatsAndDogs do
+  def pipeline(paths, batch_size, target_height, target_width) do
+    paths
+    |> Enum.shuffle()
+    |> Task.async_stream(&parse_image/1)
+    |> Stream.filter(fn
+      {:ok, {%StbImage{}, _}} -> true
+      _ -> false
+    end)
+    |> Stream.map(&to_tensors(&1, target_height, target_width))
+    |> Stream.chunk_every(batch_size, batch_size, :discard)
+    |> Stream.map(fn chunks ->
+      {img_chunk, label_chunk} = Enum.unzip(chunks)
+      {Nx.stack(img_chunk), Nx.stack(label_chunk)}
+    end)
+  end
+
+  def pipeline_with_augmentations(
+        paths,
+        batch_size,
+        target_height,
+        target_width
+      ) do
+    paths
+    |> Enum.shuffle()
+    |> Task.async_stream(&parse_image/1)
+    |> Stream.filter(fn
+      {:ok, {%StbImage{}, _}} -> true
+      _ -> false
+    end)
+    |> Stream.map(&to_tensors(&1, target_height, target_width))
+    |> Stream.map(&random_flip(&1, :height))
+    |> Stream.map(&random_flip(&1, :width))
+    |> Stream.chunk_every(batch_size, batch_size, :discard)
+    |> Stream.map(fn chunks ->
+      {img_chunk, label_chunk} = Enum.unzip(chunks)
+      {Nx.stack(img_chunk), Nx.stack(label_chunk)}
+    end)
+  end
+
+  defp random_flip({image, label}, axis) do
+    if :rand.uniform() < 0.5 do
+      {Nx.reverse(image, axes: [axis]), label}
+    else
+      {image, label}
+    end
+  end
+
+  defp parse_image(path) do
+    label = if String.contains?(path, "cat."), do: 0, else: 1
+
+    case StbImage.read_file(path) do
+      {:ok, img} -> {img, label}
+      _error -> :error
+    end
+  end
+
+  defp to_tensors({:ok, {img, label}}, target_height, target_width) do
+    img_tensor =
+      img
+      |> StbImage.resize(target_height, target_width)
+      |> StbImage.to_nx()
+      |> Nx.divide(255)
+      |> Nx.transpose(axes: [:channels, :height, :width])
+
+    label_tensor = Nx.tensor([label])
+    {img_tensor, label_tensor}
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, CatsAndDogs, <<70, 79, 82, 49, 0, 0, 21, ...>>, {:to_tensors, 3}}
+```
+
+```elixir
+notebook_path = "/home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir"
+
+target_height = 160
+target_width = 160
+batch_size = 32
+
+{test_paths, train_paths} =
+  notebook_path
+  |> Path.join("dogs-vs-cats")
+  |> Path.join("train/*.jpg")
+  |> Path.wildcard()
+  |> Enum.shuffle()
+  |> Enum.split(1000)
+
+{test_paths, val_paths} = test_paths |> Enum.split(750)
+
+train_pipeline =
+  CatsAndDogs.pipeline_with_augmentations(
+    train_paths,
+    batch_size,
+    target_height,
+    target_width
+  )
+
+val_pipeline =
+  CatsAndDogs.pipeline(
+    val_paths,
+    batch_size,
+    target_height,
+    target_width
+  )
+
+test_pipeline =
+  CatsAndDogs.pipeline(
+    test_paths,
+    batch_size,
+    target_height,
+    target_width
+  )
+
+Enum.take(train_pipeline, 1)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[
+  {#Nx.Tensor<
+     f32[32][channels: 3][height: 160][width: 160]
+     EXLA.Backend<host:0, 0.4020596755.3505520663.55881>
+     [
+       [
+         [
+           [0.7058823704719543, 0.7607843279838562, 0.7764706015586853, 0.7686274647712708, 0.8039215803146362, 0.7764706015586853, 0.7058823704719543, 0.6431372761726379, 0.6549019813537598, 0.7058823704719543, 0.6627451181411743, 0.6509804129600525, 0.7882353067398071, 0.9058823585510254, 0.8745098114013672, 0.7843137383460999, 0.7686274647712708, 0.8274509906768799, 0.8784313797950745, 0.8941176533699036, 0.8784313797950745, 0.8549019694328308, 0.8666666746139526, 0.8901960849761963, 0.8980392217636108, 0.8549019694328308, 0.8666666746139526, 0.8784313797950745, 0.8745098114013672, 0.929411768913269, 0.9372549057006836, 0.9333333373069763, 0.929411768913269, 0.9254902005195618, 0.9254902005195618, 0.8627451062202454, 0.7411764860153198, 0.6980392336845398, 0.6980392336845398, 0.7058823704719543, 0.6941176652908325, 0.6784313917160034, 0.6745098233222961, 0.6784313917160034, 0.6745098233222961, 0.6705882549285889, 0.6705882549285889, 0.6705882549285889, ...],
+           ...
+         ],
+         ...
+       ],
+       ...
+     ]
+   >,
+   #Nx.Tensor<
+     s64[32][1]
+     EXLA.Backend<host:0, 0.4020596755.3505520663.55914>
+     [
+       [0],
+       [1],
+       [1],
+       [1],
+       [1],
+       [0],
+       [1],
+       [1],
+       [0],
+       [1],
+       [1],
+       [0],
+       [1],
+       [0],
+       [1],
+       [1],
+       [1],
+       [1],
+       [1],
+       [1],
+       [0],
+       [1],
+       [1],
+       [1],
+       [0],
+       [0],
+       [1],
+       [0],
+       [1],
+       [1],
+       [0],
+       [0]
+     ]
+   >}
+]
+```
+
+In the absence of a lot of training data, training a model from scratch isn’t
+necessarily a good idea.
+
+Transfer learning often makes use of a pre-trained convolutional base followed by a custom fully-connected network.
+
+**MobileNet** is a lightweight convolutional neural network specially designed
+for use on mobile devices.
+
+MobileNet optimizes for maximum performance with minimal compute requirements and thus will be faster to work with.
+
+```elixir
+# The imported cnn_base is just a regular Axon struct, which means you can build
+# and manipulate it like you would if it was a model you built on your own.
+model_path = notebook_path |> Path.join("models/mobilenetv2-7.onnx")
+
+{cnn_base, cnn_base_params} =
+  AxonOnnx.import(
+    model_path,
+    batch_size: batch_size
+  )
+
+input_template = Nx.template({1, 3, target_height, target_width}, :f32)
+Axon.Display.as_graph(cnn_base, input_template)
+
+# Before adding any additional layers, however, you’ll need to delineate the
+# convolutional base from other components in your model. You can do this
+# with an Axon namespace.
+```
+
+<!-- livebook:{"output":true} -->
+
+```mermaid
+graph TD;
+456["446 (:clip) {1, 960, 5, 5}"];
+401["371 (:clip) {1, 192, 10, 10}"];
+377["container_0 (:container) {{1, 24, 40, 40}, {1, 24, 40, 40}}"];
+399["368 (:clip) {1, 192, 20, 20}"];
+413["388 (:clip) {1, 384, 10, 10}"];
+405["540 (:conv) {1, 384, 10, 10}"];
+427["406 (:clip) {1, 384, 10, 10}"];
+367["483 (:conv) {1, 96, 80, 80}"];
+410["546 (:conv) {1, 384, 10, 10}"];
+466["624 (:conv) {1, 320, 5, 5}"];
+369["486 (:conv) {1, 96, 40, 40}"];
+437["420 (:clip) {1, 576, 10, 10}"];
+370["328 (:clip) {1, 96, 40, 40}"];
+421["561 (:conv) {1, 64, 10, 10}"];
+397["add_2 (:add) {1, 32, 20, 20}"];
+423["add_5 (:add) {1, 64, 10, 10}"];
+386["513 (:conv) {1, 192, 20, 20}"];
+402["534 (:conv) {1, 64, 10, 10}"];
+476["output (:gemm) {32, 1000}"];
+426["567 (:conv) {1, 384, 10, 10}"];
+366["480 (:conv) {1, 16, 80, 80}"];
+382["345 (:clip) {1, 144, 20, 20}"];
+468["463 (:clip) {1, 1280, 5, 5}"];
+461["add_9 (:add) {1, 160, 5, 5}"];
+409["add_3 (:add) {1, 64, 10, 10}"];
+444["429 (:clip) {1, 576, 10, 10}"];
+380["342 (:clip) {1, 144, 40, 40}"];
+451["440 (:clip) {1, 960, 5, 5}"];
+392["359 (:clip) {1, 192, 20, 20}"];
+419["558 (:conv) {1, 384, 10, 10}"];
+417["555 (:conv) {1, 384, 10, 10}"];
+384["510 (:conv) {1, 192, 20, 20}"];
+361[/"input (:input) {1, 3, 160, 160}"/];
+462["618 (:conv) {1, 960, 5, 5}"];
+469["464 (:global_avg_pool) {1, 1280, 1, 1}"];
+431["576 (:conv) {1, 576, 10, 10}"];
+379["501 (:conv) {1, 144, 40, 40}"];
+458["449 (:clip) {1, 960, 5, 5}"];
+475["472 (:reshape) {32, 40}"];
+433["579 (:conv) {1, 96, 10, 10}"];
+434["container_6 (:container) {{1, 96, 10, 10}, {1, 96, 10, 10}}"];
+408["container_3 (:container) {{1, 64, 10, 10}, {1, 64, 10, 10}}"];
+404["376 (:clip) {1, 384, 10, 10}"];
+465["458 (:clip) {1, 960, 5, 5}"];
+454["add_8 (:add) {1, 160, 5, 5}"];
+394["362 (:clip) {1, 192, 20, 20}"];
+400["531 (:conv) {1, 192, 10, 10}"];
+448["600 (:conv) {1, 960, 5, 5}"];
+362["474 (:conv) {1, 32, 80, 80}"];
+463["455 (:clip) {1, 960, 5, 5}"];
+374["495 (:conv) {1, 144, 40, 40}"];
+414["552 (:conv) {1, 64, 10, 10}"];
+390["add_1 (:add) {1, 32, 20, 20}"];
+391["519 (:conv) {1, 192, 20, 20}"];
+385["350 (:clip) {1, 192, 20, 20}"];
+435["add_6 (:add) {1, 96, 10, 10}"];
+388["516 (:conv) {1, 32, 20, 20}"];
+373["333 (:clip) {1, 144, 40, 40}"];
+425["403 (:clip) {1, 384, 10, 10}"];
+442["add_7 (:add) {1, 96, 10, 10}"];
+453["container_8 (:container) {{1, 160, 5, 5}, {1, 160, 5, 5}}"];
+389["container_1 (:container) {{1, 32, 20, 20}, {1, 32, 20, 20}}"];
+406["379 (:clip) {1, 384, 10, 10}"];
+395["525 (:conv) {1, 32, 20, 20}"];
+393["522 (:conv) {1, 192, 20, 20}"];
+449["437 (:clip) {1, 960, 5, 5}"];
+450["603 (:conv) {1, 960, 5, 5}"];
+452["606 (:conv) {1, 160, 5, 5}"];
+418["394 (:clip) {1, 384, 10, 10}"];
+420["397 (:clip) {1, 384, 10, 10}"];
+460["container_9 (:container) {{1, 160, 5, 5}, {1, 160, 5, 5}}"];
+378["add_0 (:add) {1, 24, 40, 40}"];
+441["container_7 (:container) {{1, 96, 10, 10}, {1, 96, 10, 10}}"];
+446["432 (:clip) {1, 576, 5, 5}"];
+383["507 (:conv) {1, 32, 20, 20}"];
+372["492 (:conv) {1, 144, 40, 40}"];
+429["573 (:conv) {1, 576, 10, 10}"];
+376["498 (:conv) {1, 24, 40, 40}"];
+387["353 (:clip) {1, 192, 20, 20}"];
+364["477 (:conv) {1, 32, 80, 80}"];
+436["582 (:conv) {1, 576, 10, 10}"];
+467["627 (:conv) {1, 1280, 5, 5}"];
+457["612 (:conv) {1, 960, 5, 5}"];
+412["549 (:conv) {1, 384, 10, 10}"];
+424["564 (:conv) {1, 384, 10, 10}"];
+439["423 (:clip) {1, 576, 10, 10}"];
+371["489 (:conv) {1, 24, 40, 40}"];
+428["570 (:conv) {1, 96, 10, 10}"];
+416["add_4 (:add) {1, 64, 10, 10}"];
+443["591 (:conv) {1, 576, 10, 10}"];
+430["411 (:clip) {1, 576, 10, 10}"];
+365["320 (:clip) {1, 32, 80, 80}"];
+464["621 (:conv) {1, 960, 5, 5}"];
+396["container_2 (:container) {{1, 32, 20, 20}, {1, 32, 20, 20}}"];
+381["504 (:conv) {1, 144, 20, 20}"];
+363["317 (:clip) {1, 32, 80, 80}"];
+438["585 (:conv) {1, 576, 10, 10}"];
+375["336 (:clip) {1, 144, 40, 40}"];
+455["609 (:conv) {1, 960, 5, 5}"];
+432["414 (:clip) {1, 576, 10, 10}"];
+411["385 (:clip) {1, 384, 10, 10}"];
+440["588 (:conv) {1, 96, 10, 10}"];
+422["container_5 (:container) {{1, 64, 10, 10}, {1, 64, 10, 10}}"];
+459["615 (:conv) {1, 160, 5, 5}"];
+368["325 (:clip) {1, 96, 80, 80}"];
+398["528 (:conv) {1, 192, 20, 20}"];
+407["543 (:conv) {1, 64, 10, 10}"];
+403["537 (:conv) {1, 384, 10, 10}"];
+415["container_4 (:container) {{1, 64, 10, 10}, {1, 64, 10, 10}}"];
+445["594 (:conv) {1, 576, 5, 5}"];
+447["597 (:conv) {1, 160, 5, 5}"];
+475 --> 476;
+469 --> 475;
+468 --> 469;
+467 --> 468;
+466 --> 467;
+465 --> 466;
+464 --> 465;
+463 --> 464;
+462 --> 463;
+461 --> 462;
+460 --> 461;
+459 --> 460;
+454 --> 460;
+458 --> 459;
+457 --> 458;
+456 --> 457;
+455 --> 456;
+454 --> 455;
+453 --> 454;
+452 --> 453;
+447 --> 453;
+451 --> 452;
+450 --> 451;
+449 --> 450;
+448 --> 449;
+447 --> 448;
+446 --> 447;
+445 --> 446;
+444 --> 445;
+443 --> 444;
+442 --> 443;
+441 --> 442;
+440 --> 441;
+435 --> 441;
+439 --> 440;
+438 --> 439;
+437 --> 438;
+436 --> 437;
+435 --> 436;
+434 --> 435;
+433 --> 434;
+428 --> 434;
+432 --> 433;
+431 --> 432;
+430 --> 431;
+429 --> 430;
+428 --> 429;
+427 --> 428;
+426 --> 427;
+425 --> 426;
+424 --> 425;
+423 --> 424;
+422 --> 423;
+421 --> 422;
+416 --> 422;
+420 --> 421;
+419 --> 420;
+418 --> 419;
+417 --> 418;
+416 --> 417;
+415 --> 416;
+414 --> 415;
+409 --> 415;
+413 --> 414;
+412 --> 413;
+411 --> 412;
+410 --> 411;
+409 --> 410;
+408 --> 409;
+407 --> 408;
+402 --> 408;
+406 --> 407;
+405 --> 406;
+404 --> 405;
+403 --> 404;
+402 --> 403;
+401 --> 402;
+400 --> 401;
+399 --> 400;
+398 --> 399;
+397 --> 398;
+396 --> 397;
+395 --> 396;
+390 --> 396;
+394 --> 395;
+393 --> 394;
+392 --> 393;
+391 --> 392;
+390 --> 391;
+389 --> 390;
+388 --> 389;
+383 --> 389;
+387 --> 388;
+386 --> 387;
+385 --> 386;
+384 --> 385;
+383 --> 384;
+382 --> 383;
+381 --> 382;
+380 --> 381;
+379 --> 380;
+378 --> 379;
+377 --> 378;
+376 --> 377;
+371 --> 377;
+375 --> 376;
+374 --> 375;
+373 --> 374;
+372 --> 373;
+371 --> 372;
+370 --> 371;
+369 --> 370;
+368 --> 369;
+367 --> 368;
+366 --> 367;
+365 --> 366;
+364 --> 365;
+363 --> 364;
+362 --> 363;
+361 --> 362;
+```
+
+```elixir
+{_popped, cnn_base} = cnn_base |> Axon.pop_node()
+{_popped, cnn_base} = cnn_base |> Axon.pop_node()
+Axon.Display.as_graph(cnn_base, input_template)
+```
+
+<!-- livebook:{"output":true} -->
+
+```mermaid
+graph TD;
+456["446 (:clip) {1, 960, 5, 5}"];
+401["371 (:clip) {1, 192, 10, 10}"];
+377["container_0 (:container) {{1, 24, 40, 40}, {1, 24, 40, 40}}"];
+399["368 (:clip) {1, 192, 20, 20}"];
+413["388 (:clip) {1, 384, 10, 10}"];
+405["540 (:conv) {1, 384, 10, 10}"];
+427["406 (:clip) {1, 384, 10, 10}"];
+367["483 (:conv) {1, 96, 80, 80}"];
+410["546 (:conv) {1, 384, 10, 10}"];
+466["624 (:conv) {1, 320, 5, 5}"];
+369["486 (:conv) {1, 96, 40, 40}"];
+437["420 (:clip) {1, 576, 10, 10}"];
+370["328 (:clip) {1, 96, 40, 40}"];
+421["561 (:conv) {1, 64, 10, 10}"];
+397["add_2 (:add) {1, 32, 20, 20}"];
+423["add_5 (:add) {1, 64, 10, 10}"];
+386["513 (:conv) {1, 192, 20, 20}"];
+402["534 (:conv) {1, 64, 10, 10}"];
+426["567 (:conv) {1, 384, 10, 10}"];
+366["480 (:conv) {1, 16, 80, 80}"];
+382["345 (:clip) {1, 144, 20, 20}"];
+468["463 (:clip) {1, 1280, 5, 5}"];
+461["add_9 (:add) {1, 160, 5, 5}"];
+409["add_3 (:add) {1, 64, 10, 10}"];
+444["429 (:clip) {1, 576, 10, 10}"];
+380["342 (:clip) {1, 144, 40, 40}"];
+451["440 (:clip) {1, 960, 5, 5}"];
+392["359 (:clip) {1, 192, 20, 20}"];
+419["558 (:conv) {1, 384, 10, 10}"];
+417["555 (:conv) {1, 384, 10, 10}"];
+384["510 (:conv) {1, 192, 20, 20}"];
+361[/"input (:input) {1, 3, 160, 160}"/];
+462["618 (:conv) {1, 960, 5, 5}"];
+469["464 (:global_avg_pool) {1, 1280, 1, 1}"];
+431["576 (:conv) {1, 576, 10, 10}"];
+379["501 (:conv) {1, 144, 40, 40}"];
+458["449 (:clip) {1, 960, 5, 5}"];
+433["579 (:conv) {1, 96, 10, 10}"];
+434["container_6 (:container) {{1, 96, 10, 10}, {1, 96, 10, 10}}"];
+408["container_3 (:container) {{1, 64, 10, 10}, {1, 64, 10, 10}}"];
+404["376 (:clip) {1, 384, 10, 10}"];
+465["458 (:clip) {1, 960, 5, 5}"];
+454["add_8 (:add) {1, 160, 5, 5}"];
+394["362 (:clip) {1, 192, 20, 20}"];
+400["531 (:conv) {1, 192, 10, 10}"];
+448["600 (:conv) {1, 960, 5, 5}"];
+362["474 (:conv) {1, 32, 80, 80}"];
+463["455 (:clip) {1, 960, 5, 5}"];
+374["495 (:conv) {1, 144, 40, 40}"];
+414["552 (:conv) {1, 64, 10, 10}"];
+390["add_1 (:add) {1, 32, 20, 20}"];
+391["519 (:conv) {1, 192, 20, 20}"];
+385["350 (:clip) {1, 192, 20, 20}"];
+435["add_6 (:add) {1, 96, 10, 10}"];
+388["516 (:conv) {1, 32, 20, 20}"];
+373["333 (:clip) {1, 144, 40, 40}"];
+425["403 (:clip) {1, 384, 10, 10}"];
+442["add_7 (:add) {1, 96, 10, 10}"];
+453["container_8 (:container) {{1, 160, 5, 5}, {1, 160, 5, 5}}"];
+389["container_1 (:container) {{1, 32, 20, 20}, {1, 32, 20, 20}}"];
+406["379 (:clip) {1, 384, 10, 10}"];
+395["525 (:conv) {1, 32, 20, 20}"];
+393["522 (:conv) {1, 192, 20, 20}"];
+449["437 (:clip) {1, 960, 5, 5}"];
+450["603 (:conv) {1, 960, 5, 5}"];
+452["606 (:conv) {1, 160, 5, 5}"];
+418["394 (:clip) {1, 384, 10, 10}"];
+420["397 (:clip) {1, 384, 10, 10}"];
+460["container_9 (:container) {{1, 160, 5, 5}, {1, 160, 5, 5}}"];
+378["add_0 (:add) {1, 24, 40, 40}"];
+441["container_7 (:container) {{1, 96, 10, 10}, {1, 96, 10, 10}}"];
+446["432 (:clip) {1, 576, 5, 5}"];
+383["507 (:conv) {1, 32, 20, 20}"];
+372["492 (:conv) {1, 144, 40, 40}"];
+429["573 (:conv) {1, 576, 10, 10}"];
+376["498 (:conv) {1, 24, 40, 40}"];
+387["353 (:clip) {1, 192, 20, 20}"];
+364["477 (:conv) {1, 32, 80, 80}"];
+436["582 (:conv) {1, 576, 10, 10}"];
+467["627 (:conv) {1, 1280, 5, 5}"];
+457["612 (:conv) {1, 960, 5, 5}"];
+412["549 (:conv) {1, 384, 10, 10}"];
+424["564 (:conv) {1, 384, 10, 10}"];
+439["423 (:clip) {1, 576, 10, 10}"];
+371["489 (:conv) {1, 24, 40, 40}"];
+428["570 (:conv) {1, 96, 10, 10}"];
+416["add_4 (:add) {1, 64, 10, 10}"];
+443["591 (:conv) {1, 576, 10, 10}"];
+430["411 (:clip) {1, 576, 10, 10}"];
+365["320 (:clip) {1, 32, 80, 80}"];
+464["621 (:conv) {1, 960, 5, 5}"];
+396["container_2 (:container) {{1, 32, 20, 20}, {1, 32, 20, 20}}"];
+381["504 (:conv) {1, 144, 20, 20}"];
+363["317 (:clip) {1, 32, 80, 80}"];
+438["585 (:conv) {1, 576, 10, 10}"];
+375["336 (:clip) {1, 144, 40, 40}"];
+455["609 (:conv) {1, 960, 5, 5}"];
+432["414 (:clip) {1, 576, 10, 10}"];
+411["385 (:clip) {1, 384, 10, 10}"];
+440["588 (:conv) {1, 96, 10, 10}"];
+422["container_5 (:container) {{1, 64, 10, 10}, {1, 64, 10, 10}}"];
+459["615 (:conv) {1, 160, 5, 5}"];
+368["325 (:clip) {1, 96, 80, 80}"];
+398["528 (:conv) {1, 192, 20, 20}"];
+407["543 (:conv) {1, 64, 10, 10}"];
+403["537 (:conv) {1, 384, 10, 10}"];
+415["container_4 (:container) {{1, 64, 10, 10}, {1, 64, 10, 10}}"];
+445["594 (:conv) {1, 576, 5, 5}"];
+447["597 (:conv) {1, 160, 5, 5}"];
+468 --> 469;
+467 --> 468;
+466 --> 467;
+465 --> 466;
+464 --> 465;
+463 --> 464;
+462 --> 463;
+461 --> 462;
+460 --> 461;
+459 --> 460;
+454 --> 460;
+458 --> 459;
+457 --> 458;
+456 --> 457;
+455 --> 456;
+454 --> 455;
+453 --> 454;
+452 --> 453;
+447 --> 453;
+451 --> 452;
+450 --> 451;
+449 --> 450;
+448 --> 449;
+447 --> 448;
+446 --> 447;
+445 --> 446;
+444 --> 445;
+443 --> 444;
+442 --> 443;
+441 --> 442;
+440 --> 441;
+435 --> 441;
+439 --> 440;
+438 --> 439;
+437 --> 438;
+436 --> 437;
+435 --> 436;
+434 --> 435;
+433 --> 434;
+428 --> 434;
+432 --> 433;
+431 --> 432;
+430 --> 431;
+429 --> 430;
+428 --> 429;
+427 --> 428;
+426 --> 427;
+425 --> 426;
+424 --> 425;
+423 --> 424;
+422 --> 423;
+421 --> 422;
+416 --> 422;
+420 --> 421;
+419 --> 420;
+418 --> 419;
+417 --> 418;
+416 --> 417;
+415 --> 416;
+414 --> 415;
+409 --> 415;
+413 --> 414;
+412 --> 413;
+411 --> 412;
+410 --> 411;
+409 --> 410;
+408 --> 409;
+407 --> 408;
+402 --> 408;
+406 --> 407;
+405 --> 406;
+404 --> 405;
+403 --> 404;
+402 --> 403;
+401 --> 402;
+400 --> 401;
+399 --> 400;
+398 --> 399;
+397 --> 398;
+396 --> 397;
+395 --> 396;
+390 --> 396;
+394 --> 395;
+393 --> 394;
+392 --> 393;
+391 --> 392;
+390 --> 391;
+389 --> 390;
+388 --> 389;
+383 --> 389;
+387 --> 388;
+386 --> 387;
+385 --> 386;
+384 --> 385;
+383 --> 384;
+382 --> 383;
+381 --> 382;
+380 --> 381;
+379 --> 380;
+378 --> 379;
+377 --> 378;
+376 --> 377;
+371 --> 377;
+375 --> 376;
+374 --> 375;
+373 --> 374;
+372 --> 373;
+371 --> 372;
+370 --> 371;
+369 --> 370;
+368 --> 369;
+367 --> 368;
+366 --> 367;
+365 --> 366;
+364 --> 365;
+363 --> 364;
+362 --> 363;
+361 --> 362;
+```
+
+```elixir
+# Axon namespaces are simple metadata layers that provide a mechanism for
+# distinguishing between components of a model.
+
+# Namespaces are really just a way to tell Axon to group the parameters 
+# and state of multiple layers into a single place.
+
+# namespaces provide a simple and powerful way of initializing
+# portions of a model from pre-trained checkpoints
+
+# Namespaces offer a mechanism for expressing hierarchy and logical separation.
+
+cnn_base = cnn_base |> Axon.namespace("feature_extractor")
+
+# When using pre-trained models, it’s common to freeze or stop training for
+# the pre-trained portion of your model in order to avoid catastrophic 
+# forgetting in the early stages of training. In other words, the pre-trained
+# model remains entirely static during initial training.4
+
+# The early stages of training are typically the least stable.
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Axon<
+  inputs: %{"input" => {32, 3, 224, 224}}
+  outputs: "feature_extractor"
+  nodes: 110
+>
+```
+
+```elixir
+# You can mark certain layers as frozen using the Axon.freeze/2 function.
+# However, it offers an API for more fine-grained freezing in models.
+
+cnn_base = cnn_base |> Axon.freeze()
+
+# Because the amount of output features in this model is relatively large, 
+# a global pooling layer works better because it reduces the
+# amount of input features to the classification head.
+
+model =
+  cnn_base
+  |> Axon.global_avg_pool(channels: :first)
+  |> Axon.dropout(rate: 0.2)
+  |> Axon.dense(1)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Axon<
+  inputs: %{"input" => {32, 3, 224, 224}}
+  outputs: "dense_0"
+  nodes: 113
+>
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Train Model
+
+```elixir
+loss =
+  &Axon.Losses.binary_cross_entropy(&1, &2,
+    reduction: :mean,
+    from_logits: true
+  )
+
+optimizer = Polaris.Optimizers.adam(learning_rate: 1.0e-3)
+
+trained_model_state =
+  model
+  |> Axon.Loop.trainer(loss, optimizer)
+  |> Axon.Loop.metric(:accuracy)
+  |> Axon.Loop.validate(model, val_pipeline)
+  |> Axon.Loop.early_stop("validation_loss", mode: :min, patience: 5)
+  |> Axon.Loop.run(
+    train_pipeline,
+    %{"feature_extractor" => cnn_base_params},
+    epochs: 100,
+    compiler: EXLA
+  )
+
+# When you don’t specify a final sigmoid activation (or softmax
+# for multi-class classification problems), you need to tell your 
+# loss function that you are passing logits rather than probabilities.
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+
+21:19:06.163 [debug] Forwarding options: [compiler: EXLA] to JIT compiler
+
+21:19:06.212 [warning] found unexpected key in the initial parameters map: "output"
+Epoch: 0, Batch: 700, accuracy: 0.8552514 loss: 0.3041750
+Epoch: 1, Batch: 700, accuracy: 0.8865461 loss: 0.2789356
+Epoch: 2, Batch: 700, accuracy: 0.8886411 loss: 0.2666411
+Epoch: 3, Batch: 100, accuracy: 0.8957302 loss: 0.2652870
+```
+
+```elixir
+eval_model = model |> Axon.sigmoid()
+eval_model
+|> Axon.Loop.evaluator()
+|> Axon.Loop.metric(:accuracy)
+|> Axon.Loop.run(test_pipeline, trained_model_state, compiler: EXLA)
+```
+
+## Fine Tuning Your Model
+
+Freezing the model initially was important because the early stages of training are unstable and your model was at risk of losing all of its prior knowledge.
+
+During fine-tuning you unfreeze the top-most layers of the pre-trained model.
+
+By unfreezing a small amount of the top-most layers, you allow your model to learn features which are specific to your dataset
+
+```elixir
+# This code unfreezes the top 50 layers of your model
+
+model = model |> Axon.unfreeze(up: 50)
+
+loss =
+  &Axon.Losses.binary_cross_entropy(&1, &2,
+    reduction: :mean,
+    from_logits: true
+  )
+
+# When fine-tuning, it’s important to keep the
+# learning rate low—larger learning rates when fine-tuning make the model
+# susceptible to overfitting and possibly unstable updates.
+optimizer = Polaris.Optimizers.adam(learning_rate: 1.0e-5)
+
+trained_model_state =
+  model
+  |> Axon.Loop.trainer(loss, optimizer)
+  |> Axon.Loop.metric(:accuracy)
+  |> Axon.Loop.validate(model, val_pipeline)
+  |> Axon.Loop.early_stop("validation_loss", mode: :min, patience: 5)
+  |> Axon.Loop.run(
+    train_pipeline,
+    trained_model_state,
+    epochs: 100,
+    compiler: EXLA
+  )
+```
+
+```elixir
+eval_model = model |> Axon.sigmoid()
+eval_model
+|> Axon.Loop.evaluator()
+|> Axon.Loop.metric(:accuracy)
+|> Axon.Loop.run(test_pipeline, trained_model_state, compiler: EXLA)
+
+# By fine-tuning the top layers of your pre-trained model, 
+# you were able to increase the performance of your model by 
+# a few percentage points
+```
+
+## Understanding Transfer Learning
+
+Transfer learning is a technique for repurposing a pre-trained model for use
+on a related task.
+
+If you have a pre-trained model which already has some useful representations of input data which is similar to yours, it makes sense that it would allow your model to learn faster and with better final performance.
+
+**Why Transfer Learning Works**
+
+You can treat portions of pre-trained models as general
+feature detectors and apply them to your particular use case.
+
+Pre-trained models are often trained on large datasets, they are exposed to a wide range of input data and are capable of generalizing to lots of different use-cases because they’ve been trained on a broad range of data.
+
+**Knowing When to Use Transfer Learning**
+
+It depends on many factors such as the kind of data you have, how much data you have, how much resources you have, and what your objectives are.
+
+In some domains, such as computer vision and natural language processing,
+transfer learning is the standard approach to training new models on specialized applications.
+
+Generally speaking, if you don’t have a lot of data, you’ll probably benefit from making use of pre-trained models.
+
+Some domains just don’t have any useful pre-trained models.
+
+For transfer learning to work, you need to ensure you choose a
+model that was trained on data similar enough to your use case to be 
+effective.
+
+You need to take into account all of your performance
+objectives when choosing a pre-trained model.
+
+Fortunately, there are an abundance of pre-trained models in the machine
+learning ecosystem. Most pre-trained models you’ll find were built in Python with Python-specific machine learning frameworks.
+
+## Taking Advantage of the ML Ecosystem
+
+Nx was designed for flexibility. Rather then depend entirely on projects with a popular Python front-end like TensorFlow or PyTorch, Nx implements a modular approach which makes it capable of taking advantage of any tensor manipulation library.
+
+The key feature of Axon is the Axon data structure, which represents neural networks in a graph-like data structure.
+
+Axon is not tied to any particular runtime format.
+
+The Python ecosystem is massive, Axon and its related projects have an explicit goal of seamless import of any model from the Python ecosystem for use within Elixir without forcing you to implement a Port or tying you to a particular runtime.
+
+**Exporting Models from TensorFlow**
+
+TensorFlow’s blessed serialized model format is the Saved Model, TensorFlow Keras supported a variety of serialization formats for models and weights.
+
+**Using tf2onnx**
+
+tf2onnx is a Python library for converting TensorFlow models to the ONNX
+format, supports TensorFlow saved models, TensorFlow JS models,
+and TensorFlow Lite models. Example:
+
+$ python3 -m tf2onnx.convert \
+--saved-model path-to-model \
+--output model.onnx
+
+**Finding Pre-trained Tensorflow Models**
+
+[TensorFlow Hub](https://tfhub.dev/) is a TensorFlow-specific repository of pre-trained models for a variety of tasks. Which are in a variety of different formats. Generally, most models are supported by tf2onnx.
+
+**Exporting Models from Pytorch**
+
+Since Pytorch is a product of Meta's AI laboratory, and ONNX too. PyTorch has first-class support for exporting models to ONNX. The torch.onnx module provides functions for exporting models to ONNX.
+
+All you need to do is provide an explicit input for PyTorch to use to build the ONNX graph.
+
+**Finding Pre-trained Pytorch Models**
+
+Similar to TensorFlow, there are a number of places to go for finding pre-
+trained models in PyTorch.
+
+There are application specific libraries, such as TorchVision 10, TorchText, 11 and TorchAudio 12 with some pre-trained models available for export.
+
+There are a number of considerations
+when exporting models to ONNX, and not all implementations are written
+with these considerations in mind.
+
+**Exporting Models from Huggingface**
+
+HuggingFace transformers is a library that provides conveniences and pre-trained implementations of transformer models.
+
+HuggingFace also has a pre-trained model hub which hosts models from a large number of organizations and individuals.
+
+Elixir has it’s own library which interfaces directly with the HuggingFace Hub known as Bumblebee.
+
+It’s possible to export some transformer models from HuggingFace using the transformers.onnx Python module.
