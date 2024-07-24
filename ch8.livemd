@@ -810,7 +810,9 @@ trained_model_state =
 Epoch: 0, Batch: 700, accuracy: 0.8552514 loss: 0.3041750
 Epoch: 1, Batch: 700, accuracy: 0.8865461 loss: 0.2789356
 Epoch: 2, Batch: 700, accuracy: 0.8886411 loss: 0.2666411
-Epoch: 3, Batch: 100, accuracy: 0.8957302 loss: 0.2652870
+Epoch: 3, Batch: 700, accuracy: 0.8922075 loss: 0.2602088
+Epoch: 4, Batch: 700, accuracy: 0.8913161 loss: 0.2565694
+Epoch: 5, Batch: 200, accuracy: 0.8917910 loss: 0.2557037
 ```
 
 ```elixir
