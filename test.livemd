@@ -8,9 +8,9 @@ Mix.install([
   {:stb_image, "~> 0.6.0"},
   {:req, "~> 0.4.5"},
   {:kino, "~> 0.11.0"}
-])
+], config: [nx: [default_backend: {EXLA.Backend, client: :cuda}]])
 
-Nx.global_default_backend(EXLA.Backend)
+# Nx.global_default_backend(EXLA.Backend)
 Nx.Defn.global_default_options(compiler: EXLA)
 ```
 

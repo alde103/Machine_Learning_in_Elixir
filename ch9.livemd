@@ -438,8 +438,9 @@ end)
 # keeps the top tokens in your frequency map by sorting 
 # the inputs and keeping the top N most frequent tokens
 num_tokens = 1024
-
-unknown_token = 0
+pad_token = 0
+unknown_token = 1
+max_seq_len = 64
 
 tokens =
   frequencies
@@ -449,7 +450,7 @@ tokens =
   # The value of a single token represents a categorical variable
   # without any signigicance in order or magnitud, but has to be an unique
   # integer.
-  |> Enum.with_index(fn {token, _}, i -> {token, i + 1} end)
+  |> Enum.with_index(fn {token, _}, i -> {token, i + 2} end)
   |> Map.new()
 ```
 
@@ -457,56 +458,56 @@ tokens =
 
 ```
 %{
-  "recommend" => 367,
-  "at" => 30,
-  "william" => 1017,
-  "sit" => 846,
-  "beauty" => 912,
-  "message" => 746,
-  "saying" => 624,
-  "take" => 187,
-  "along" => 358,
-  "playing" => 380,
-  "game" => 496,
-  "work" => 161,
-  "under" => 484,
-  "acted" => 1005,
-  "run" => 530,
-  "understand" => 372,
-  "white" => 439,
-  "films" => 95,
-  "lines" => 405,
-  "bit" => 220,
-  "straight" => 780,
-  "now" => 148,
-  "filmed" => 797,
-  "became" => 856,
-  "title" => 413,
-  "only" => 60,
-  "like" => 38,
-  "totally" => 469,
-  "again" => 173,
-  "enjoy" => 343,
-  "person" => 408,
-  "seems" => 180,
-  "get" => 74,
-  "final" => 464,
-  "despite" => 451,
-  "important" => 662,
-  "points" => 749,
-  "early" => 400,
-  "place" => 269,
-  "comments" => 754,
-  "note" => 871,
-  "works" => 494,
-  "scenes" => 136,
-  "id" => 444,
-  "went" => 419,
-  "small" => 384,
-  "supporting" => 668,
-  "weird" => 903,
-  "flick" => 525,
-  "several" => 429,
+  "recommend" => 368,
+  "at" => 31,
+  "william" => 1018,
+  "sit" => 847,
+  "beauty" => 913,
+  "message" => 747,
+  "saying" => 625,
+  "take" => 188,
+  "along" => 359,
+  "playing" => 381,
+  "game" => 497,
+  "work" => 162,
+  "under" => 485,
+  "acted" => 1006,
+  "run" => 531,
+  "understand" => 373,
+  "white" => 440,
+  "films" => 96,
+  "lines" => 406,
+  "bit" => 221,
+  "straight" => 781,
+  "now" => 149,
+  "filmed" => 798,
+  "became" => 857,
+  "title" => 414,
+  "only" => 61,
+  "like" => 39,
+  "totally" => 470,
+  "again" => 174,
+  "enjoy" => 344,
+  "person" => 409,
+  "seems" => 181,
+  "get" => 75,
+  "final" => 465,
+  "despite" => 452,
+  "important" => 663,
+  "points" => 750,
+  "early" => 401,
+  "place" => 270,
+  "comments" => 755,
+  "note" => 872,
+  "works" => 495,
+  "scenes" => 137,
+  "id" => 445,
+  "went" => 420,
+  "small" => 385,
+  "supporting" => 669,
+  "weird" => 904,
+  "flick" => 526,
+  "several" => 430,
   ...
 }
 ```
@@ -522,6 +523,7 @@ tokenize = fn review ->
   |> String.split()
   |> Enum.map(&Map.get(tokens, &1, unknown_token))
   |> Nx.tensor()
+  |> then(&Nx.pad(&1, pad_token, [{0, max_seq_len - Nx.size(&1), 0}]))
 end
 
 tokenize.(review)
@@ -531,8 +533,106 @@ tokenize.(review)
 
 ```
 #Nx.Tensor<
-  s64[17]
-  EXLA.Backend<host:0, 0.1901530917.2364669984.233557>
-  [1, 0, 6, 0, 0, 114, 161, 2, 0, 36, 0, 6, 360, 10, 17, 6, 471]
+  s64[64]
+  EXLA.Backend<host:0, 0.1901530917.2364669974.232393>
+  [2, 1, 7, 1, 1, 115, 162, 3, 1, 37, 1, 7, 361, 11, 18, 7, 472, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...]
 >
+```
+
+```elixir
+# Pipelines
+
+batch_size = 64
+
+train_pipeline =
+  train_data
+  |> Stream.map(fn {review, label} ->
+    {tokenize.(review), Nx.tensor(label)}
+  end)
+  |> Stream.chunk_every(batch_size, batch_size, :discard)
+  |> Stream.map(fn reviews_and_labels ->
+    {review, label} = Enum.unzip(reviews_and_labels)
+    {Nx.stack(review), Nx.stack(label) |> Nx.new_axis(-1)}
+  end)
+
+test_pipeline =
+  test_data
+  |> Stream.map(fn {review, label} ->
+    {tokenize.(review), Nx.tensor(label)}
+  end)
+  |> Stream.chunk_every(batch_size, batch_size, :discard)
+  |> Stream.map(fn reviews_and_labels ->
+    {review, label} = Enum.unzip(reviews_and_labels)
+    {Nx.stack(review), Nx.stack(label) |> Nx.new_axis(-1)}
+  end)
+Enum.take(train_pipeline, 1)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[
+  {#Nx.Tensor<
+     s64[64][64]
+     EXLA.Backend<host:0, 0.1901530917.2364669974.232582>
+     [
+       [1, 1, 7, 952, 2, 1, 287, 8, 2, 187, 19, 1, 6, 25, 615, 1, 1, 46, 144, 1, 149, 1, 1, 1, 1, 181, 6, 103, 12, 168, 170, 28, 285, 1, 16, 90, 391, 2, 211, 15, 34, 1, 1, 1, 36, 2, 1, 592, ...],
+       ...
+     ]
+   >,
+   #Nx.Tensor<
+     s64[64][1]
+     EXLA.Backend<host:0, 0.1901530917.2364669974.232651>
+     [
+       [0],
+       [0],
+       [0],
+       [1],
+       [1],
+       [0],
+       [1],
+       [0],
+       [1],
+       [1],
+       [1],
+       [0],
+       [0],
+       [0],
+       [1],
+       [0],
+       [0],
+       [1],
+       [0],
+       [0],
+       [1],
+       [1],
+       [1],
+       [0],
+       [0],
+       [1],
+       [0],
+       [0],
+       [1],
+       [1],
+       [0],
+       [0],
+       [0],
+       [0],
+       [1],
+       [1],
+       [0],
+       [1],
+       [1],
+       [0],
+       [1],
+       [1],
+       [0],
+       [1],
+       [1],
+       [1],
+       [1],
+       ...
+     ]
+   >}
+]
 ```
