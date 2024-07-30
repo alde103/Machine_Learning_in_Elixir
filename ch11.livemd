@@ -1,0 +1,71 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Chapter 11. Model Everything with Transformers
+
+```elixir
+Mix.install(
+  [
+    {:bumblebee, "~> 0.5"},
+    {:axon, "~> 0.6"},
+    {:nx, "~> 0.7"},
+    {:kino, "~> 0.8"},
+    {:kino_bumblebee, ">= 0.0.0"},
+    {:exla, ">= 0.0.0"}
+  ],
+  config: [nx: [default_backend: {EXLA.Backend, client: :cuda}]]
+)
+
+# export PATH=/usr/local/cuda/bin${PATH:+:${PATH}}
+# export XLA_TARGET=cuda120 
+# Nx.global_default_backend(EXLA.Backend)
+Nx.Defn.global_default_options(compiler: EXLA)
+```
+
+## Introduction
+
+Transformers have proven extremely generalizable on a wide-range of input modalities.
+
+Transformers are a class of deep learning models that were originally designed
+for natural language processing. they work well in audio processing, computer vision, and more.
+
+There is seemingly no limit to the power of a carefully crafted
+transformer model and a lot of input data.
+
+Transformers aren’t necessarily the best model for modeling everything, but
+they do quite well at modeling a lot of things.
+
+**Bumblebee** is an Elixir library which consists of pre-trained Axon models as well as out-of-the-box pipelines for solving machine learning problems.
+
+## Paying Attention
+
+The key feature of transformers is in how the apply attention.
+
+Sequence-to-sequence models are designed specifically for problems in which
+the objective is to map a source sequence to a target sequence.
+
+Sequence-to-
+sequence models consist of an encoder which is responsible for summarizing
+the information present in the source sequence in a context vector and a
+decoder which is initialized with the context vector and produces the target
+sequence.
+
+First, the encoder extracts meaning from the source
+sequence, then the decoder uses this meaning to generate a target sequence.
+
+In RNN, long sequences, it’s common for latter portions of the sequence to be overrepresented in the final state, while earlier portions are forgotten.
+
+To overcome the problem of forgetting, you can introduce a shortcut that
+computes the alignment between source and target sentences. This is the
+attention mechanism.
+
+Attention provides a map that indicates how much each hidden state should be weighed into each output token.
+
+The attention matrix essentially tells you how important each word
+in the source sequence is to the target sequence.
+
+Attention enables a model to learn to selectively pay
+attention to certain tokens in the input.
+
+```elixir
+
+```
