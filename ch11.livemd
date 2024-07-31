@@ -66,6 +66,51 @@ in the source sequence is to the target sequence.
 Attention enables a model to learn to selectively pay
 attention to certain tokens in the input.
 
+## Going from RNNs to Transformers
+
+Attention provides a shortcut between source and target sequences. This
+helps a recurrent model learn longer sequences by highlighting which portions
+of the context vector map to portions of the target sequence.
+
+The recurrent process of a RNN works on a single time step in the forward or reverse
+direction, so it’s difficult to capture relationships between non-adjacent tokens.
+
+Self-attention highlights relationships between words in a sequence.
+
+The typical transformer architecture makes use of an encoder-decoder architecture on a masked language modeling task.
+
+The encoder in a transformer typically consists of a collection of multiple
+encoder layers and operates on a representation of the source sequence. Each
+encoder layer is identical, and consists of some form of self-attention and
+some series of output projections. The actual variant of self-attention in use
+in a transformer is typically multi-head self-attention. Multi-head self-attention
+is identical to self-attention with one slight exception.
+
+In single-headed self-attention, the model computes one attention matrix,
+which means it learns to weight the relationships between tokens in one way.
+In multi-headed self-attention, the model computes multiple (typically 12)
+different attention matrices (heads).
+
+The decoder in a transformer model typically consists of a collection of multiple
+decoder layers and operates on a representation of the target
+sequence—usually the source sequence shifted to the right by one token—and
+some information about the source sequence from the encoder. Each decoder
+layer also consists of some variant of self-attention, but the decoder also
+makes use of cross-attention. The decoder layer computes multi-headed self-
+attention on the target sequence. The decoder layer also computes multi-
+headed cross-attention between information provided by the encoder and the
+target sequence.
+
+One issue with using just attention to model temporal data is that transformers have no way of representing temporal dependencies. Most transformers introduce a positional embedding or positional encoding which injects information about positional relationships into the
+model.
+
+Most models are differentiated only by
+slight tweaks in specific parts such as the attention implementation, the
+positional encoding used, or the training process.
+
+Transformers prove significantly more powerful than their recurrent counterparts. Additionally, transformers are readily parallelizable and are significantly more scalable
+than an equivalent recurrent neural network.
+
 ```elixir
 
 ```
