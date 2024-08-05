@@ -19,6 +19,8 @@ Mix.install(
 # export XLA_TARGET=cuda120 
 #Nx.global_default_backend(EXLA.Backend)
 Nx.Defn.global_default_options(compiler: EXLA)
+
+Application.loaded_applications()
 ```
 
 ## Introduction
@@ -58,19 +60,19 @@ train_data =
 
 ```
 
-21:00:05.912 [info] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+15:28:35.574 [info] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
 
-21:00:05.912 [info] XLA service 0x7f6a000215e0 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+15:28:35.574 [info] XLA service 0x7fbf8c58bf90 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
 
-21:00:05.912 [info]   StreamExecutor device (0): NVIDIA GeForce RTX 2060, Compute Capability 7.5
+15:28:35.574 [info]   StreamExecutor device (0): NVIDIA GeForce RTX 2060, Compute Capability 7.5
 
-21:00:05.912 [info] Using BFC allocator.
+15:28:35.574 [info] Using BFC allocator.
 
-21:00:05.912 [info] XLA backend allocating 5420482560 bytes on device 0 for BFCAllocator.
+15:28:35.574 [info] XLA backend allocating 5420482560 bytes on device 0 for BFCAllocator.
 
-21:00:06.165 [info] Loaded cuDNN version 8907
+15:28:35.735 [info] Loaded cuDNN version 8907
 
-21:00:06.214 [info] Using nvlink for parallel linking
+15:28:35.744 [info] Using nvlink for parallel linking
 
 ```
 
@@ -153,9 +155,10 @@ end
 ```
 
 ```elixir
+optimizer = Polaris.Optimizers.adam(learning_rate: 1.0e-3)
 trained_model_state =
   model
-  |> Axon.Loop.trainer(:mean_squared_error, Axon.Optimizers.adam(1.0e-3))
+  |> Axon.Loop.trainer(:mean_squared_error, optimizer)
   |> Axon.Loop.handle_event(:epoch_completed, visualize_test_image)
   |> Axon.Loop.run(
     Stream.zip(train_data, train_data),
@@ -168,36 +171,33 @@ trained_model_state =
 <!-- livebook:{"output":true} -->
 
 ```
-warning: Axon.Optimizers.adam/1 is deprecated. Use Polaris.Optimizers.adam/1 instead
-└─ /home/alde/Documents/MyDevelopment/Machine_Learning_in_Elixir/ch12.livemd#cell:a3qiuihog2hwqlw7:3
 
-
-22:45:16.751 [debug] Forwarding options: [compiler: EXLA] to JIT compiler
-Epoch: 0, Batch: 900, loss: 0.0243214
+15:28:36.144 [debug] Forwarding options: [compiler: EXLA] to JIT compiler
+Epoch: 0, Batch: 900, loss: 0.0248995
 ```
 
 <!-- livebook:{"output":true} -->
 
 ```
-Epoch: 1, Batch: 912, loss: 0.0158038
+Epoch: 1, Batch: 912, loss: 0.0162349
 ```
 
 <!-- livebook:{"output":true} -->
 
 ```
-Epoch: 2, Batch: 924, loss: 0.0123496
+Epoch: 2, Batch: 924, loss: 0.0126611
 ```
 
 <!-- livebook:{"output":true} -->
 
 ```
-Epoch: 3, Batch: 936, loss: 0.0103900
+Epoch: 3, Batch: 936, loss: 0.0106401
 ```
 
 <!-- livebook:{"output":true} -->
 
 ```
-Epoch: 4, Batch: 898, loss: 0.0091604
+Epoch: 4, Batch: 898, loss: 0.0093698
 ```
 
 <!-- livebook:{"output":true} -->
@@ -207,14 +207,14 @@ Epoch: 4, Batch: 898, loss: 0.0091604
   "decoder_dense_0" => %{
     "bias" => #Nx.Tensor<
       f32[256]
-      EXLA.Backend<cuda:0, 0.3428917133.3471966240.230339>
-      [-0.024319563060998917, -0.03374124690890312, -0.016717825084924698, 0.20613473653793335, 0.26516419649124146, 0.044232748448848724, 0.0857461467385292, -0.012179962359368801, -0.037334613502025604, 0.004324085079133511, -0.07982579618692398, -0.11133469641208649, 0.09377171844244003, 0.03962923213839531, 0.042364731431007385, 0.060100357979536057, 0.24876253306865692, -0.008186716586351395, -0.1386401206254959, 0.07425974309444427, 0.03563845902681351, 0.26992297172546387, 0.10051167756319046, 0.03290257602930069, 0.1498967707157135, 0.23329195380210876, 0.0025002947077155113, 0.20460094511508942, 0.03520585596561432, 0.06461299955844879, 0.17768751084804535, 0.09494055062532425, 0.08655203878879547, 0.08160529285669327, 0.057952508330345154, 0.08393292874097824, -0.009104117751121521, -0.033990923315286636, -0.1701013147830963, 0.045080527663230896, 0.014088070020079613, 0.05248705670237541, 0.09189663827419281, 0.23571713268756866, 0.05827738344669342, -0.034953705966472626, 0.08573732525110245, 0.18495285511016846, ...]
+      EXLA.Backend<cuda:0, 0.1280829035.961413146.148097>
+      [-0.03358352556824684, 0.14719457924365997, 0.047859322279691696, -0.06007593125104904, 0.07609081268310547, 0.09592358767986298, 0.09029640257358551, -0.10707228630781174, 0.03331953287124634, 0.023275304585695267, -0.06623981893062592, 0.01498512551188469, 0.18329575657844543, 0.35531699657440186, -0.081662617623806, 0.005139938089996576, 0.30270999670028687, 0.03409880772233009, 0.11031244695186615, 0.09900042414665222, 0.0, -0.009150408208370209, 0.023774156346917152, -0.007421302143484354, -0.08070474863052368, -0.06493905931711197, -0.0038365384098142385, 0.0962701141834259, -0.08882840722799301, 0.0411686897277832, 0.13369399309158325, 0.017320901155471802, 0.050818897783756256, -0.14117653667926788, -0.1929497867822647, -0.10755538195371628, 0.0700593963265419, 0.05708174780011177, 0.3508542478084564, 0.17104274034500122, 0.09279286116361618, -0.022909149527549744, 0.2124267816543579, 0.16928289830684662, 0.03360110521316528, -0.08768583834171295, 0.1869715303182602, 0.03289155662059784, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[128][256]
-      EXLA.Backend<cuda:0, 0.3428917133.3471966240.230340>
+      EXLA.Backend<cuda:0, 0.1280829035.961413146.148098>
       [
-        [0.036289282143116, -0.2135372757911682, 0.07855630666017532, 0.14507223665714264, -0.005494407843798399, 0.02439933456480503, -0.10730762034654617, -0.036758773028850555, 0.06838040053844452, 0.04490184783935547, -0.09203695505857468, -0.08849064260721207, 0.144709512591362, -0.08479256927967072, -0.08964014053344727, -0.1022753119468689, 0.10379327088594437, -0.11440812796354294, 0.2056046724319458, -0.03955991566181183, 0.005439110565930605, -0.09337763488292694, -0.009114908054471016, -0.03031492792069912, -0.04412383586168289, 0.0961625874042511, 0.09390757977962494, 0.1671614646911621, -0.041649576276540756, -0.057799335569143295, 0.011180946603417397, -0.15465663373470306, 0.028233850374817848, 0.021884417161345482, 0.08190984278917313, -0.10658582299947739, 0.012095038779079914, 0.00865098088979721, 0.09590816497802734, -0.12158184498548508, -0.006460580974817276, -0.1260594129562378, -0.113841213285923, -0.0433875247836113, -0.03082657977938652, 0.07832618802785873, -0.2148934155702591, ...],
+        [0.0943245217204094, 0.1470770239830017, 0.037468407303094864, 0.05413543060421944, 0.05037049576640129, 0.18432918190956116, 0.0428994856774807, 0.13318882882595062, -0.01153883058577776, 0.018123045563697815, -0.09158847481012344, 0.06888823211193085, -0.039424967020750046, -0.07414860278367996, 0.1153806522488594, 0.10380880534648895, 0.0702199935913086, -0.02743763104081154, -0.11355732381343842, -0.14595496654510498, -0.07473880052566528, -0.13335460424423218, -0.08129600435495377, -0.08521658182144165, 0.07378123700618744, 0.15034149587154388, 0.0068656024523079395, -0.07175452262163162, -0.08976184576749802, -0.058564692735672, 0.07544589042663574, 0.07439132034778595, -0.14050783216953278, -0.059380315244197845, 0.0053012981079518795, 0.042207807302474976, 0.02137850970029831, -0.060687609016895294, 0.023512832820415497, -0.0046524778008461, -0.1971149891614914, 0.1218905821442604, 0.04003162682056427, 0.14348271489143372, -0.10761748254299164, 0.11748366802930832, 0.024644697085022926, ...],
         ...
       ]
     >
@@ -222,14 +222,14 @@ Epoch: 4, Batch: 898, loss: 0.0091604
   "decoder_dense_1" => %{
     "bias" => #Nx.Tensor<
       f32[784]
-      EXLA.Backend<cuda:0, 0.3428917133.3471966240.230341>
-      [-0.01890827715396881, -0.022221922874450684, -0.01796412095427513, -0.017382705584168434, -0.01795188896358013, -0.019038164988160133, -0.01985081471502781, -0.01671929471194744, -0.018723471090197563, -0.01885196752846241, -0.018992308527231216, -0.01831326261162758, -0.01709422655403614, -0.017499899491667747, -0.018796110525727272, -0.015335873700678349, -0.016313614323735237, -0.020302463322877884, -0.020274663344025612, -0.01651875674724579, -0.01874568499624729, -0.023971108719706535, -0.021038953214883804, -0.018940318375825882, -0.01694750227034092, -0.016278278082609177, -0.02010621316730976, -0.01965896598994732, -0.019567320123314857, -0.01715899258852005, -0.01883556693792343, -0.017868967726826668, -0.017669646069407463, -0.019557034596800804, -0.019245490431785583, -0.018234388902783394, -0.018702276051044464, -0.020627278834581375, -0.019365452229976654, -0.019128426909446716, -0.018891552463173866, -0.019146185368299484, -0.017600052058696747, -0.018922096118330956, -0.01679682359099388, -0.01848248392343521, -0.01793292909860611, ...]
+      EXLA.Backend<cuda:0, 0.1280829035.961413146.148099>
+      [-0.020390182733535767, -0.018449051305651665, -0.017454849556088448, -0.019341692328453064, -0.015256397426128387, -0.015832731500267982, -0.01947108283638954, -0.015722503885626793, -0.01708628609776497, -0.01931079290807247, -0.01829073764383793, -0.018703313544392586, -0.0169929601252079, -0.017667485401034355, -0.020903335884213448, -0.021479172632098198, -0.01865961216390133, -0.016398213803768158, -0.02000364102423191, -0.016498051583766937, -0.02150695025920868, -0.016690615564584732, -0.018364468589425087, -0.018413295969367027, -0.016351794824004173, -0.01639104075729847, -0.016864366829395294, -0.017346052452921867, -0.01856669783592224, -0.016635190695524216, -0.016570184379816055, -0.018585361540317535, -0.01904638297855854, -0.0181532371789217, -0.020947188138961792, -0.019229233264923096, -0.018336087465286255, -0.01638035476207733, -0.018215518444776535, -0.015490906313061714, -0.018450642004609108, -0.019536221399903297, -0.01905001886188984, -0.016188502311706543, -0.019006645306944847, -0.017063872888684273, -0.01854388415813446, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[256][784]
-      EXLA.Backend<cuda:0, 0.3428917133.3471966240.230342>
+      EXLA.Backend<cuda:0, 0.1280829035.961413146.148100>
       [
-        [0.01906551979482174, -0.02295497991144657, -0.029860589653253555, -0.07156840711832047, -0.05390588566660881, -0.07356256991624832, 0.013172361068427563, -0.0729248896241188, 0.043269138783216476, -0.01576106809079647, -0.0335020013153553, 0.02729194052517414, 0.035664837807416916, -0.009749239310622215, 0.0099441884085536, -0.04757070168852806, -0.07439646869897842, -0.08996418863534927, -0.08803759515285492, -0.06495393067598343, 0.020452234894037247, -0.09426551312208176, 0.02612890861928463, -0.08544730395078659, 0.05906157195568085, -0.05082722753286362, 0.03746887296438217, -0.07631582021713257, 0.040888912975788116, -0.02488127537071705, -0.03238377347588539, -0.0066023943945765495, -0.09095389395952225, 0.010581274516880512, -0.03874997794628143, -0.04148449748754501, -0.08805596083402634, 5.575495306402445e-4, -0.08704648166894913, -0.011238637380301952, -0.019110072404146194, 0.03316256031394005, 0.03436431661248207, -0.027826089411973953, 0.024035047739744186, -0.07673566043376923, ...],
+        [0.010422815568745136, -0.11816863715648651, -0.0537860281765461, 0.03504267334938049, -0.02969478629529476, -0.055388111621141434, -0.08712612092494965, 0.04757523909211159, -0.07880470156669617, -2.552550286054611e-4, -0.07640185952186584, 0.026023555546998978, -0.01282033883035183, 0.018672514706850052, 0.018475037068128586, -0.03121836856007576, -0.10885956138372421, -0.04257294908165932, 0.020314782857894897, -0.012032462283968925, -0.03235900029540062, 0.011844903230667114, -0.007947825826704502, -0.04422858729958534, -0.011763719841837883, -0.061571188271045685, 0.0030453314539045095, -0.09966656565666199, -0.05717364326119423, 0.036913953721523285, -0.07028766721487045, 0.018086228519678116, -0.0627027302980423, -0.0481456033885479, -0.05125122889876366, -0.05959334224462509, -0.027740441262722015, 0.005655078683048487, -0.03276785835623741, -0.08753988891839981, 0.026095284149050713, -0.038323432207107544, -0.05871415138244629, -0.04464117810130119, -0.02422509528696537, 0.023755289614200592, ...],
         ...
       ]
     >
@@ -237,14 +237,14 @@ Epoch: 4, Batch: 898, loss: 0.0091604
   "encoder_dense_0" => %{
     "bias" => #Nx.Tensor<
       f32[256]
-      EXLA.Backend<cuda:0, 0.3428917133.3471966240.230343>
-      [-0.043304648250341415, 0.18399764597415924, 0.04203381389379501, -0.23011547327041626, -0.1629650741815567, 0.217673197388649, -0.0904146283864975, -0.1073060855269432, 0.4499191343784332, -0.016620555892586708, -0.013919045217335224, -0.0183483324944973, 0.013764440082013607, 0.3377233147621155, -0.05179639160633087, -0.015441849827766418, 0.15188662707805634, 0.34805935621261597, 0.44170573353767395, 0.39827418327331543, 0.10207138955593109, 0.29315048456192017, 0.026342473924160004, 0.39629653096199036, 0.12565544247627258, -0.02435440756380558, 0.25359106063842773, 0.3309515714645386, 0.008823877200484276, -0.016512786969542503, -0.23005779087543488, 0.22069525718688965, 0.04882504418492317, 0.42909932136535645, -0.023875132203102112, 0.07319298386573792, 0.2171703279018402, 0.31034576892852783, 0.17945905029773712, -0.016712933778762817, -0.2314833402633667, 0.28654688596725464, -0.09044083207845688, 0.4354754090309143, -0.08637525141239166, 0.3914473056793213, ...]
+      EXLA.Backend<cuda:0, 0.1280829035.961413146.148101>
+      [0.3508366346359253, -0.03829455003142357, 0.32901889085769653, 0.37830033898353577, 0.1694507896900177, 0.1842377781867981, 0.20676884055137634, 0.3946477174758911, -0.01894422248005867, -0.015675805509090424, 0.2750374972820282, 0.4348452687263489, 0.2587827742099762, 0.3219538629055023, -0.031804803758859634, 0.09373267740011215, 0.18314799666404724, -0.03218858689069748, -0.02516889199614525, 0.2798326015472412, -0.2659311592578888, -0.07087229192256927, 0.3227143883705139, -0.15120190382003784, -0.25065627694129944, -0.06360957771539688, -0.2139185220003128, 0.12393135577440262, 0.09956423193216324, 0.06886565685272217, 0.3051835000514984, -0.0420043058693409, 0.25358062982559204, 0.3621041178703308, 0.32100266218185425, 0.20205169916152954, 0.3987680673599243, 0.14047594368457794, 0.38190218806266785, -0.014990528114140034, 0.35908737778663635, -0.11830808222293854, -0.01409695390611887, 0.44307056069374084, 0.019677745178341866, -0.10828884690999985, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[784][256]
-      EXLA.Backend<cuda:0, 0.3428917133.3471966240.230344>
+      EXLA.Backend<cuda:0, 0.1280829035.961413146.148102>
       [
-        [-0.0528387613594532, -0.025719180703163147, -0.026644594967365265, -0.051880404353141785, -0.02537517622113228, -0.074128158390522, 0.009387113153934479, -0.03258788585662842, 0.01668928563594818, 0.06479679048061371, 0.07447077333927155, -0.05711597204208374, 0.030320636928081512, -0.06568504124879837, -0.05649399012327194, -0.010931521654129028, -0.05200745910406113, 0.06635327637195587, 0.06338390707969666, 0.022689059376716614, -0.014755766838788986, -0.05040675029158592, -0.014982875436544418, -0.05151403695344925, 0.017536848783493042, -0.07139655202627182, -0.008578360080718994, 0.05103267729282379, 0.0523449182510376, -0.05528717860579491, 0.06982368230819702, -0.0017823576927185059, -0.0037224367260932922, -0.0015469565987586975, 0.07054616510868073, -0.025325339287519455, 0.040206313133239746, 0.05921439826488495, 0.0066007450222969055, -0.0026065632700920105, -0.037024691700935364, 0.025455981492996216, 0.025124602019786835, -0.04962915927171707, -0.04361710697412491, ...],
+        [0.02751968801021576, -0.06336179375648499, 0.04965601861476898, -0.06534393876791, 0.013147130608558655, 0.06926549971103668, -0.07229223102331161, 0.036430008709430695, -0.07114231586456299, -0.013247020542621613, 0.06298665702342987, -0.07019850611686707, -0.01833079382777214, -0.036422017961740494, -0.016077175736427307, 0.033841751515865326, -0.0046700164675712585, -0.031233880668878555, 0.0013586804270744324, 0.040453650057315826, 0.021024681627750397, -0.061719708144664764, -0.023916754871606827, -0.024031639099121094, 0.06241220235824585, 0.01778940111398697, -0.018931347876787186, -0.03038865327835083, -0.041545651853084564, -0.020140334963798523, 0.06095331907272339, -0.012784615159034729, -0.06882019340991974, -0.040585413575172424, -0.007744140923023224, -0.04624207317829132, 0.032342903316020966, -0.043302733451128006, 0.026350028812885284, 0.022198408842086792, -9.93087887763977e-5, -0.016978289932012558, -0.017814066261053085, 0.05350366234779358, 0.0037358328700065613, ...],
         ...
       ]
     >
@@ -252,14 +252,14 @@ Epoch: 4, Batch: 898, loss: 0.0091604
   "encoder_dense_1" => %{
     "bias" => #Nx.Tensor<
       f32[128]
-      EXLA.Backend<cuda:0, 0.3428917133.3471966240.230345>
-      [-0.25381365418434143, -0.09696804732084274, 0.002558395266532898, 0.2607980966567993, -0.1399974226951599, 0.3650723397731781, 0.15049226582050323, 0.391552209854126, 0.33854782581329346, 0.16475211083889008, 0.18273599445819855, -0.0920567736029625, -0.012684471905231476, 0.1389341503381729, 0.22568641602993011, -0.11369340866804123, -0.12058866769075394, -0.007696834858506918, 0.257377028465271, 0.2930028736591339, 0.19295921921730042, -0.08680175244808197, 0.09907509386539459, 0.11535894870758057, 0.16169796884059906, 0.11744023859500885, -0.029378218576312065, 0.10478008538484573, 0.12443793565034866, 0.02954523265361786, -0.045433059334754944, 0.29974696040153503, -0.03539813682436943, 0.1295410543680191, -0.009887678548693657, -0.20914055407047272, 0.112053282558918, -0.005428957752883434, 0.04919718578457832, 0.3200157582759857, 0.04826745018362999, -0.19935789704322815, 0.1015954315662384, -0.01453453116118908, -0.011737392283976078, ...]
+      EXLA.Backend<cuda:0, 0.1280829035.961413146.148103>
+      [0.04078741371631622, 0.2911781072616577, 0.3887898921966553, -0.014371946454048157, 0.13270463049411774, -0.06356070935726166, -0.007561418227851391, 0.32520216703414917, -0.09530646353960037, 0.21848049759864807, -0.0091722896322608, 0.013369317166507244, 0.3731463849544525, -0.15123632550239563, 0.10825006663799286, 0.002884325571358204, 0.027134323492646217, 0.06115123629570007, 0.2218521237373352, -0.11446478962898254, -0.012406601570546627, 0.10286812484264374, -0.003978585824370384, 0.04925594478845596, 0.14542259275913239, 0.3123621642589569, -0.1922520101070404, 0.03406480699777603, 0.22536863386631012, 0.3773418664932251, -0.21564604341983795, -0.01171001885086298, -0.010820560157299042, -0.11780289560556412, -0.14531242847442627, 0.24146007001399994, 0.2873072028160095, 0.3373035192489624, 0.05336606875061989, -0.009794727899134159, -0.19496329128742218, 0.007744320668280125, -0.1906600147485733, 0.11696255952119827, -0.009201247245073318, ...]
     >,
     "kernel" => #Nx.Tensor<
       f32[256][128]
-      EXLA.Backend<cuda:0, 0.3428917133.3471966240.230346>
+      EXLA.Backend<cuda:0, 0.1280829035.961413146.148104>
       [
-        [0.09061522036790848, -0.029385391622781754, -0.05518260598182678, 0.06527890264987946, -0.027372321113944054, -0.11267683655023575, 0.11759626865386963, -0.07666678726673126, -0.06786229461431503, 0.055323660373687744, 0.10072305053472519, -0.0053148395381867886, -0.1320914626121521, 0.03561873361468315, -0.01970522478222847, -0.01765655353665352, -0.14466367661952972, 0.07918056100606918, -0.12090840935707092, -0.0616278350353241, -0.1108192428946495, 0.04582803696393967, 0.03960726782679558, 0.029154863208532333, -0.0930435061454773, -0.01873568445444107, -0.010780547745525837, -0.12350839376449585, 0.0869125947356224, 0.017338985577225685, 0.05443299561738968, 0.05515207722783089, -0.11704619973897934, -0.059532057493925095, 0.10277421027421951, 0.12634873390197754, -0.012780209071934223, 0.08235663175582886, 0.006001143716275692, 0.09322859346866608, 0.07398451864719391, -0.09769970178604126, -0.06995069235563278, -0.05189216136932373, ...],
+        [0.0022876274306327105, 0.07346101850271225, -0.028356611728668213, 0.019468897953629494, -0.0397397018969059, -0.029466042295098305, 0.09757357090711594, 0.05821102485060692, 0.19358199834823608, -0.14213420450687408, 0.05953574180603027, -0.14315876364707947, 0.05864633247256279, -0.04696108400821686, -0.09643428027629852, 0.05372188985347748, -0.024186260998249054, -0.09249326586723328, 0.051500964909791946, 0.04706280305981636, -0.08439093828201294, 0.06849031150341034, 0.0021663575898855925, 0.05464199557900429, -0.021815935149788857, 0.18826042115688324, -0.015697140246629715, -0.09473477303981781, 0.03997614234685898, 0.23125925660133362, -0.08220279961824417, -0.08015941083431244, -0.04969064146280289, -0.047307420521974564, -0.1099730059504509, -0.08890201896429062, -0.04302332550287247, 0.10244646668434143, 0.05671800673007965, 0.00789731927216053, 0.11230262368917465, -0.08292891085147858, 0.05183473974466324, -0.169743612408638, ...],
         ...
       ]
     >
@@ -293,6 +293,783 @@ The structure of your encoded representations is at the mercy of a neural networ
 coherent output, because your decoder only knows how to handle latent
 representations produced by the encoder.
 
+## Learning a Structured Latent
+
+A latent space is a representation of data where similar inputs lie closely
+together in the space.
+
+Variational autoencoders are designed to force your model to follow some input distribution (structured latent space), such as a normal
+distribution.
+
+Variational autoencoders are the same as autoencoders, but learns to project inputs down to the parameters of a distribution.
+
 ```elixir
+defmodule VAE do
+  import Nx.Defn
+
+  def encoder(input) do
+    encoded =
+      input
+      |> Axon.conv(32,
+        kernel_size: 3,
+        activation: :relu,
+        strides: 2,
+        padding: :same
+      )
+      |> Axon.conv(32,
+        kernel_size: 3,
+        activation: :relu,
+        strides: 2,
+        padding: :same
+      )
+      |> Axon.flatten()
+      |> Axon.dense(16, activation: :relu)
+
+    z_mean = Axon.dense(encoded, 2)
+    z_log_var = Axon.dense(encoded, 2)
+    # Custom layers in Axon are defined with the Axon.layer/3 function
+    z = Axon.layer(&sample/3, [z_mean, z_log_var], op_name: :sample)
+    # Axon.container/1 is an Axon construct which allows you to
+    # wrap layers into Elixir collections such as tuples, maps, and structs.
+    Axon.container({z_mean, z_log_var, z})
+  end
+
+  # This method implements what is known as the reparameterization trick.
+  defnp sample(z_mean, z_log_var, _opts \\ []) do
+    noise_shape = Nx.shape(z_mean)
+    key = Nx.Random.key(42)
+    {epsilon, _new_key} = Nx.Random.normal(key, shape: noise_shape)
+    z_mean + Nx.exp(0.5 * z_log_var) * epsilon
+  end
+
+  def decoder(input) do
+    input
+    |> Axon.dense(7 * 7 * 64, activation: :relu)
+    # |> Axon.reshape({:batch, 7, 7, 64})
+    |> Axon.reshape({:batch, 64, 7, 7})
+    # Transposed convolutions behave somewhat similarly to traditional
+    # convolutions. However, they can be used as a strategy for upsampling
+    # rather than downsampling.
+    |> Axon.conv_transpose(64,
+      kernel_size: {3, 3},
+      activation: :relu,
+      strides: [2, 2],
+      padding: :same
+    )
+    |> Axon.conv_transpose(32,
+      kernel_size: {3, 3},
+      activation: :relu,
+      strides: [2, 2],
+      padding: :same
+    )
+    |> Axon.conv_transpose(1,
+      kernel_size: {3, 3},
+      activation: :sigmoid,
+      padding: :same
+    )
+  end
+
+  defn train_step(encoder_fn, decoder_fn, optimizer_fn, batch, state) do
+    # encoder_fn and decoder_fn represent the predict functions for the
+    # encoder and decoder respectively.
+    {batch_loss, joint_param_grads} =
+      value_and_grad(
+        state[:model_state],
+        &joint_objective(encoder_fn, decoder_fn, batch, &1)
+      )
+
+    # The optimizer_fn is an update function which scales the gradients
+    # according to some algorithm such as Adam.
+
+    {scaled_updates, new_optimizer_state} =
+      optimizer_fn.(
+        joint_param_grads,
+        state[:optimizer_state],
+        state[:model_state]
+      )
+
+    # Applies the scaled updates to :model_state using Axon.Updates.apply_updates
+    new_model_state =
+      Axon.Updates.apply_updates(
+        state[:model_state],
+        scaled_updates
+      )
+
+    # For tracking purposes
+    new_loss =
+      state[:loss]
+      |> Nx.multiply(state[:i])
+      |> Nx.add(batch_loss)
+      |> Nx.divide(Nx.add(state[:i], 1))
+
+    %{
+      state
+      | i: Nx.add(state[:i], 1),
+        loss: new_loss,
+        model_state: new_model_state,
+        optimizer_state: new_optimizer_state
+    }
+  end
+
+  # The joint-objective function uses all of 
+  # the model’s outputs to form a joint loss.
+  defnp joint_objective(encoder_fn, decoder_fn, batch, joint_params) do
+    %{prediction: preds} = encoder_fn.(joint_params["encoder"], batch)
+    {z_mean, z_log_var, z} = preds
+    %{prediction: reconstruction} = decoder_fn.(joint_params["decoder"], z)
+
+    # reconstruction loss which measures how well your decoder reconstructs
+    # the original batch of images from the encoded representation.
+    recon_loss =
+      Axon.Losses.binary_cross_entropy(
+        batch,
+        reconstruction,
+        reduction: :mean
+      )
+
+    # A regularization which penalizes the model from drifting too far 
+    # away from a normal distribution. This force the normal distribution,
+    # mainly help the encoder.
+    kl_loss = -0.5 * (1 + z_log_var - Nx.pow(z_mean, 2) - Nx.exp(z_log_var))
+    kl_loss = Nx.mean(Nx.sum(kl_loss, axes: [1]))
+    recon_loss + kl_loss
+  end
+
+  defn init_step(
+         encoder_init_fn,
+         decoder_init_fn,
+         optimizer_init_fn,
+         batch,
+         init_state
+       ) do
+    encoder_params = encoder_init_fn.(batch, init_state)
+    # decoder_params = decoder_init_fn.(Nx.random_uniform({64, 2}), init_state)
+
+    key = Nx.Random.key(100)
+
+    {decoder_params, _new_key} =
+      decoder_init_fn.(Nx.Random.uniform(key, shape: {64, 2}), init_state)
+
+    # combine the encoder and decoder parameters into a single map
+    joint_params = %{
+      "encoder" => encoder_params,
+      "decoder" => decoder_params
+    }
+
+    # It’s necessary to join the parameters because you want to use a single
+    # optimizer for both models
+
+    optimizer_state = optimizer_init_fn.(joint_params)
+
+    %{
+      i: Nx.tensor(0),
+      loss: Nx.tensor(0.0),
+      model_state: joint_params,
+      optimizer_state: optimizer_state
+    }
+  end
+
+  def display_sample(
+        %Axon.Loop.State{step_state: state} = out_state,
+        decoder_fn
+      ) do
+    latent = Nx.tensor([[0.0, 0.0], [0.5, 0.5], [1.0, 1.0]])
+    %{prediction: out} = decoder_fn.(state[:model_state]["decoder"], latent)
+    out_image = Nx.multiply(out, 255) |> Nx.as_type(:u8)
+
+    upsample =
+      Axon.Layers.resize(
+        out_image,
+        size: {512, 512},
+        channels: :first
+      )
+
+    for i <- 0..2 do
+      Kino.Image.new(Nx.reshape(upsample[i], {512, 512, 1})) |> Kino.render()
+    end
+
+    {:continue, out_state}
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
 
 ```
+{:module, VAE, <<70, 79, 82, 49, 0, 0, 37, ...>>, {:display_sample, 2}}
+```
+
+```elixir
+template = Nx.template({1, 128}, :f32)
+Axon.Display.as_graph(VAE.decoder(Axon.input("latent")), template)
+```
+
+<!-- livebook:{"output":true} -->
+
+```mermaid
+graph TD;
+53[/"latent (:input) {1, 128}"/];
+54["dense_0 (:dense) {1, 3136}"];
+55["relu_0 (:relu) {1, 3136}"];
+56["reshape_0 (:reshape) {1, 64, 7, 7}"];
+57["conv_transpose_0 (:conv_transpose) {1, 128, 14, 64}"];
+58["relu_1 (:relu) {1, 128, 14, 64}"];
+59["conv_transpose_1 (:conv_transpose) {1, 256, 28, 32}"];
+60["relu_2 (:relu) {1, 256, 28, 32}"];
+61["conv_transpose_2 (:conv_transpose) {1, 256, 28, 1}"];
+62["sigmoid_0 (:sigmoid) {1, 256, 28, 1}"];
+61 --> 62;
+60 --> 61;
+59 --> 60;
+58 --> 59;
+57 --> 58;
+56 --> 57;
+55 --> 56;
+54 --> 55;
+53 --> 54;
+```
+
+```elixir
+model = Axon.input("foo")
+loop = Axon.Loop.trainer(model, :binary_cross_entropy, :sgd)
+IO.inspect loop, structs: false
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%{
+  init: #Function<134.37423472/2 in Nx.Defn.Compiler.fun/2>,
+  handlers: %{
+    started: [],
+    halted: [],
+    completed: [],
+    epoch_completed: [
+      {#Function<27.60356141/1 in Axon.Loop.log/3>,
+       #Function<6.60356141/2 in Axon.Loop.build_filter_fn/1>}
+    ],
+    epoch_halted: [],
+    epoch_started: [],
+    iteration_completed: [
+      {#Function<27.60356141/1 in Axon.Loop.log/3>,
+       #Function<64.60356141/2 in Axon.Loop.build_filter_fn/1>}
+    ],
+    iteration_started: []
+  },
+  step: #Function<134.37423472/2 in Nx.Defn.Compiler.fun/2>,
+  __struct__: Axon.Loop,
+  metrics: %{
+    "loss" => {#Function<11.43280200/3 in Axon.Metrics.running_average/1>,
+     #Function<9.60356141/2 in Axon.Loop.build_loss_fn/1>}
+  },
+  attached_state: nil,
+  output_transform: #Function<44.60356141/1 in Axon.Loop.trainer/4>
+}
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Axon.Loop<
+  metrics: %{
+    "loss" => {#Function<11.43280200/3 in Axon.Metrics.running_average/1>,
+     #Function<9.60356141/2 in Axon.Loop.build_loss_fn/1>}
+  },
+  handlers: %{
+    started: [],
+    halted: [],
+    completed: [],
+    epoch_completed: [
+      {#Function<27.60356141/1 in Axon.Loop.log/3>,
+       #Function<6.60356141/2 in Axon.Loop.build_filter_fn/1>}
+    ],
+    epoch_halted: [],
+    epoch_started: [],
+    iteration_completed: [
+      {#Function<27.60356141/1 in Axon.Loop.log/3>,
+       #Function<64.60356141/2 in Axon.Loop.build_filter_fn/1>}
+    ],
+    iteration_started: []
+  },
+  ...
+>
+```
+
+**Train Step Function**
+
+1. Determine the gradient of the model with respect to some objective function.
+2. Scale gradients using an optimizer and current state.
+3. Apply scaled gradients to obtain a new model state.
+4. Return the updated state.
+
+```elixir
+encoder = Axon.input("image") |> VAE.encoder()
+decoder = Axon.input("latent") |> VAE.decoder()
+
+{encoder_init_fn, encoder_fn} = Axon.build(encoder, mode: :train)
+{decoder_init_fn, decoder_fn} = Axon.build(decoder, mode: :train)
+
+{optimizer_init_fn, optimizer_fn} = Polaris.Optimizers.adam(learning_rate: 1.0e-3)
+
+init_fn =
+  &VAE.init_step(
+    encoder_init_fn,
+    decoder_init_fn,
+    optimizer_init_fn,
+    &1,
+    &2
+  )
+
+step_fn =
+  &VAE.train_step(
+    encoder_fn,
+    decoder_fn,
+    optimizer_fn,
+    &1,
+    &2
+  )
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Function<41.105768164/2 in :erl_eval.expr/6>
+```
+
+```elixir
+#step_fn
+#|> Axon.Loop.loop(init_fn)
+#|> Axon.Loop.handle_event(:epoch_completed, &VAE.display_sample(&1, decoder_fn))
+#|> Axon.Loop.log(
+#  fn
+    #%Axon.Loop.State{epoch: epoch, iteration: iter, step_state: state} ->
+     # "\rEpoch: #{epoch}, batch: #{iter}, loss: #{Nx.to_number(state[:loss])}"
+  #end
+#)
+#|> Axon.Loop.run(train_data, %{}, compiler: EXLA, epochs: 10)
+nil
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+nil
+```
+
+** Broken code....**
+
+** (ArithmeticError) bad argument in arithmetic expression: {2} * 1
+
+```
+:erlang.*({2}, 1)
+(elixir 1.16.3) lib/tuple.ex:167: Tuple.product/2
+(elixir 1.16.3) lib/tuple.ex:167: Tuple.product/2
+(axon 0.6.1) lib/axon/initializers.ex:603: Axon.Initializers.compute_fans/1
+(axon 0.6.1) lib/axon/initializers.ex:578: Axon.Initializers."__defn:variance_scaling_impl__"/3
+(axon 0.6.1) lib/axon/compiler.ex:1092: Axon.Compiler.init_param/6
+(elixir 1.16.3) lib/enum.ex:2528: Enum."-reduce/3-lists^foldl/2-0-"/3
+#cell:l2pphyxcwyjvflyp:10: (file)
+```
+
+<!-- livebook:{"break_markdown":true} -->
+
+DALL-E 2 is an example of a diffusion
+model which internally makes use of a VAE and a few other models to generate
+incredible realistic images
+
+## Generating with GANs
+
+Generative adversarial networks (GANs). For many image generation
+tasks, you’ll find a pre-trained diffusion model like stable diffusion
+is much more powerful than a pre-trained GAN.
+
+Generative adversarial networks are deep generative models that make use
+of a dueling network architecture with a generator and discriminator.
+
+The **generator** is responsible for transforming a latent representation into something which resembles inputs from the training data.
+
+The **discriminator** attempts to differentiate real inputs from generated inputs, and in turn provides feedback to the generator to improve it’s generations.
+
+Generative adversarial networks have some interesting theoretical guarantees, and in practice they’ve proven capable of generating incredible images. However, they can be very difficult to train when compared to VAEs.
+
+```elixir
+defmodule GAN do
+  import Nx.Defn
+
+  def discriminator(input) do
+    input
+    |> Axon.conv(32,
+      activation: :mish,
+      kernel_size: 3,
+      strides: 2,
+      padding: :same
+    )
+    |> Axon.layer_norm()
+    |> Axon.conv(64,
+      activation: :mish,
+      kernel_size: 3,
+      strides: 2,
+      padding: :same
+    )
+    |> Axon.layer_norm()
+    |> Axon.flatten()
+    |> Axon.dropout(rate: 0.5)
+    |> Axon.dense(1, activation: :sigmoid)
+  end
+
+  def generator(input) do
+    input
+    |> Axon.dense(128 * 7 * 7, activation: :mish)
+    |> Axon.reshape({:batch, 7, 7, 128})
+    |> Axon.resize({14, 14})
+    |> Axon.conv(128, kernel_size: 3, padding: :same)
+    |> Axon.layer_norm()
+    |> Axon.relu()
+    |> Axon.resize({28, 28})
+    |> Axon.conv(64, kernel_size: 3, padding: :same)
+    |> Axon.layer_norm()
+    |> Axon.relu()
+    |> Axon.conv(1, activation: :tanh, kernel_size: 3, padding: :same)
+  end
+
+  defn train_step(
+         discriminator_fn,
+         generator_fn,
+         discriminator_optimizer,
+         generator_optimizer,
+         batch,
+         state
+       ) do
+    d_params = state[:model_state]["discriminator"]
+    g_params = state[:model_state]["generator"]
+    d_optimizer_state = state[:optimizer_state]["discriminator"]
+    g_optimizer_state = state[:optimizer_state]["generator"]
+    # Update discriminator
+    {d_loss, d_grads} =
+      value_and_grad(d_params, fn d_params ->
+        d_objective(
+          d_params,
+          g_params,
+          discriminator_fn,
+          generator_fn,
+          batch
+        )
+      end)
+
+    {d_updates, new_d_optimizer_state} =
+      discriminator_optimizer.(
+        d_grads,
+        d_optimizer_state,
+        d_params
+      )
+
+    new_d_params = Axon.Updates.apply_updates(d_params, d_updates)
+    # Update generator
+    {g_loss, g_grads} =
+      value_and_grad(g_params, fn g_params ->
+        g_objective(
+          d_params,
+          g_params,
+          discriminator_fn,
+          generator_fn,
+          batch
+        )
+      end)
+
+    {g_updates, new_g_optimizer_state} =
+      generator_optimizer.(
+        g_grads,
+        g_optimizer_state,
+        g_params
+      )
+
+    new_g_params = Axon.Updates.apply_updates(g_params, g_updates)
+    # Update Losses
+    new_d_loss =
+      state[:loss]["discriminator"]
+      |> Nx.multiply(state[:i])
+      |> Nx.add(d_loss)
+      |> Nx.divide(Nx.add(state[:i], 1))
+
+    new_g_loss =
+      state[:loss]["generator"]
+      |> Nx.multiply(state[:i])
+      |> Nx.add(g_loss)
+      |> Nx.divide(Nx.add(state[:i], 1))
+
+    new_loss = %{
+      "discriminator" => new_d_loss,
+      "generator" => new_g_loss
+    }
+
+    new_model_state = %{
+      "discriminator" => new_d_params,
+      "generator" => new_g_params
+    }
+
+    new_optimizer_state = %{
+      "discriminator" => new_d_optimizer_state,
+      "generator" => new_g_optimizer_state
+    }
+
+    %{
+      model_state: new_model_state,
+      optimizer_state: new_optimizer_state,
+      loss: new_loss,
+      i: Nx.add(state[:i], 1)
+    }
+  end
+
+  defn d_objective(
+         d_params,
+         g_params,
+         discriminator_fn,
+         generator_fn,
+         real_batch
+       ) do
+    batch_size = Nx.axis_size(real_batch, 0)
+    real_targets = Nx.broadcast(1, {batch_size, 1})
+    fake_targets = Nx.broadcast(0, {batch_size, 1})
+    key = Nx.Random.key(100)
+    latent = Nx.Random.normal(key, shape: {batch_size, 128})
+    %{prediction: fake_batch} = generator_fn.(g_params, latent)
+    %{prediction: real_labels} = discriminator_fn.(d_params, real_batch)
+    %{prediction: fake_labels} = discriminator_fn.(d_params, fake_batch)
+
+    real_loss =
+      Axon.Losses.binary_cross_entropy(
+        real_targets,
+        real_labels,
+        reduction: :mean
+      )
+
+    fake_loss =
+      Axon.Losses.binary_cross_entropy(
+        fake_targets,
+        fake_labels,
+        reduction: :mean
+      )
+
+    0.5 * real_loss + 0.5 * fake_loss
+  end
+
+  defn g_objective(
+         d_params,
+         g_params,
+         discriminator_fn,
+         generator_fn,
+         real_batch
+       ) do
+    batch_size = Nx.axis_size(real_batch, 0)
+    real_targets = Nx.broadcast(1, {batch_size, 1})
+    key = Nx.Random.key(100)
+    latent = Nx.Random.normal(key, shape: {batch_size, 128})
+    %{prediction: fake_batch} = generator_fn.(g_params, latent)
+    %{prediction: fake_labels} = discriminator_fn.(d_params, fake_batch)
+
+    Axon.Losses.binary_cross_entropy(
+      real_targets,
+      fake_labels,
+      reduction: :mean
+    )
+  end
+
+  defn init_state(
+         discriminator_init_fn,
+         generator_init_fn,
+         discriminator_optimizer_init,
+         generator_optimizer_init,
+         batch,
+         init_state
+       ) do
+    d_params = discriminator_init_fn.(batch, init_state)
+    key = Nx.Random.key(42)
+    g_params = generator_init_fn.(Nx.Random.normal(key, shape: {64, 128}), init_state)
+    d_optimizer_state = discriminator_optimizer_init.(d_params)
+    g_optimizer_state = generator_optimizer_init.(g_params)
+
+    model_state = %{
+      "discriminator" => d_params,
+      "generator" => g_params
+    }
+
+    optimizer_state = %{
+      "discriminator" => d_optimizer_state,
+      "generator" => g_optimizer_state
+    }
+
+    loss = %{
+      "discriminator" => Nx.tensor(0.0),
+      "generator" => Nx.tensor(0.0)
+    }
+
+    %{
+      model_state: model_state,
+      optimizer_state: optimizer_state,
+      loss: loss,
+      i: Nx.tensor(0)
+    }
+  end
+
+  def display_sample(
+        %Axon.Loop.State{step_state: state} = out_state,
+        generator_fn
+      ) do
+    key = Nx.Random.key(42)
+    latent = Nx.Random.normal(key, shape: {3, 128})
+    %{prediction: out} = generator_fn.(state[:model_state]["decoder"], latent)
+    out_image = Nx.multiply(out, 255) |> Nx.as_type(:u8)
+
+    upsample =
+      Axon.Layers.resize(
+        out_image,
+        size: {512, 512},
+        channels: :first
+      )
+
+    for i <- 0..2 do
+      Kino.Image.new(Nx.reshape(upsample[i], {512, 512, 1})) |> Kino.render()
+    end
+
+    {:continue, out_state}
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, GAN, <<70, 79, 82, 49, 0, 0, 44, ...>>, {:display_sample, 2}}
+```
+
+```elixir
+discriminator = GAN.discriminator(Axon.input("image"))
+generator = GAN.generator(Axon.input("latent"))
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Axon<
+  inputs: %{"latent" => nil}
+  outputs: "tanh_0"
+  nodes: 14
+>
+```
+
+GAN, the basic workflow is:
+
+1. Compute the gradient of the discriminator on its objective
+2. Scale the gradients by the discriminator’s optimizer
+3. Update the discriminator
+4. Compute the gradient of the generator on its objective
+5. Scale the gradients by the generator’s optimizer
+6. Update the generator
+
+In general, the process of writing a custom training loop is
+really only as difficult as writing a custom objective function.
+
+```elixir
+{discriminator_init_fn, discriminator_fn} = Axon.build(discriminator, mode: :train)
+{generator_init_fn, generator_fn} = Axon.build(generator, mode: :train)
+
+# To prevent the discriminator from dominating the generator before the generator can get
+# its bearings during training, you need to lower the learning rate of the discriminator
+{d_optimizer_init, d_optimizer} = Polaris.Optimizers.adam(learning_rate: 1.0e-4)
+{g_optimizer_init, g_optimizer} = Polaris.Optimizers.adam(learning_rate: 1.0e-3)
+
+init_fn =
+  &GAN.init_state(
+    discriminator_init_fn,
+    generator_init_fn,
+    d_optimizer_init,
+    g_optimizer_init,
+    &1,
+    &2
+  )
+
+step_fn =
+  &GAN.train_step(
+    discriminator_fn,
+    generator_fn,
+    d_optimizer,
+    g_optimizer,
+    &1,
+    &2
+  )
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Function<41.105768164/2 in :erl_eval.expr/6>
+```
+
+```elixir
+step_fn
+|> Axon.Loop.loop(init_fn)
+|> Axon.Loop.handle_event(
+  :epoch_completed,
+  &GAN.display_sample(&1, generator_fn)
+)
+|> Axon.Loop.log(
+  fn
+    %Axon.Loop.State{epoch: epoch, iteration: iter, step_state: state} ->
+      d_loss = state[:loss]["discriminator"]
+      g_loss = state[:loss]["generator"]
+
+      "\rEpoch: #{epoch}, batch: #{iter}," <>
+        " d_loss: #{Nx.to_number(d_loss)}," <>
+        " g_loss: #{Nx.to_number(g_loss)}"
+  end,
+  event: :iteration_completed,
+  device: :stdio
+)
+|> Axon.Loop.run(train_data, %{}, compiler: EXLA, epochs: 10)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+
+17:50:11.605 [debug] Forwarding options: [compiler: EXLA] to JIT compiler
+
+```
+
+## Learning without Supervision in Practice
+
+**Unsupervised Learning in Theory**
+
+Yann Lecun, one of the godfathers of deep learning, once called unsupervised
+learning—specifically self-supervised learning.
+
+The unsupervised learning is the most important research area in machine learning.
+
+Generative modeling can be considered the purest
+form of unsupervised learning and possibly at the core of intelligence.
+
+**What is the State-of-the-art?**
+
+Stable Diffusion is a text-to-image model which makes use of latent diffusion. Diffusion is the process of progressively denoising images starting from random
+noise over a fixed number of timesteps.
+
+The forward diffusion process progressively adds noise to an input image,
+until the image essentially becomes random noise. The reverse diffusion
+process learns to map the random noise back to the input image.
+
+**Applications of Autoencoders, VAEs, and GANs**
+
+***Image Denoising***
+
+Image denoising is the process of taking a noisy image and mapping it to a
+clean image. By applying a variety of noise to input images, you can train an
+autoencoder to defeat intentional and unintentional defects in imagery.
+
+***Super-resolution***
+
+Super-resolution is a class of image techniques to enhance the resolution of
+an input image. Super-resolution itself has a number of applications in medical
+imaging, microscopic imaging, and more.
+
+***Anomaly detection***
+Anomaly detection is the process of detecting anomalous data points.
