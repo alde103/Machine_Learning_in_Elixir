@@ -51,7 +51,15 @@ defmodule BookSearch.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
       {:plug_cowboy, "~> 2.5"},
-      {:pgvector, "~> 0.2.0"}
+      {:pgvector, "~> 0.2.0"},
+      # {:bumblebee, "~> 0.3.0"},
+      # {:nx, "~> 0.5.0"},
+      # {:exla, "~> 0.5.0"},
+      # {:explorer, "~> 0.5.0"}
+      {:bumblebee, "~> 0.5"},
+      {:nx, "~> 0.7"},
+      {:exla, ">= 0.0.0"},
+      {:explorer, "~> 0.5"}
     ]
   end
 

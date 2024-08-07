@@ -17,7 +17,12 @@ defmodule BookSearch.Application do
       # Start a worker by calling: BookSearch.Worker.start_link(arg)
       # {BookSearch.Worker, arg},
       # Start to serve requests, typically the last entry
-      BookSearchWeb.Endpoint
+      BookSearchWeb.Endpoint,
+      {Nx.Serving,
+       serving: BookSearch.Model.serving(defn_options: [compiler: EXLA]),
+       batch_size: 16,
+       batch_timeout: 100, # ms.
+       name: BookSearchModel}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
