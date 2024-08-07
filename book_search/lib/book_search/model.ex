@@ -16,7 +16,7 @@ defmodule BookSearch.Model do
   end
 
   def predict(text) do
-    Nx.Serving.batched_run(BookSearchModel, text)
+    Nx.Serving.batched_run(BookSearchModel, text).embedding
   end
 
   defp load() do

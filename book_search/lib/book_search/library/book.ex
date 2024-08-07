@@ -15,6 +15,12 @@ defmodule BookSearch.Library.Book do
   def changeset(book, attrs) do
     book
     |> cast(attrs, [:author, :title, :description, :embedding])
-    |> validate_required([:author, :title, :description, :embedding])
+    |> validate_required([:author, :title, :description])
+  end
+
+  @doc false
+  def put_embedding(%{changes: %{description: desc}} = book_changeset) do
+    embedding = BookSearch.Model.predict(desc)
+    put_change(book_changeset, :embedding, embedding)
   end
 end

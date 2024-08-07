@@ -19,6 +19,8 @@ defmodule BookSearchWeb.Router do
 
     get "/", PageController, :home
 
+    live "/search", SearchLive.Index, :index
+
     resources "/books", BookController
   end
 
