@@ -1,0 +1,86 @@
+# Chapter 14. That’s a Wrap
+
+## Learning from Experience
+
+Reinforcement learning is concerned with creating
+agents capable of making intelligent actions and learning from reward signals
+in an environment. Reinforcement learning is fundamentally different from
+both supervised and unsupervised learning, in which, the
+learning process is entirely online as an agent interacts with it’s environment.
+
+Reinforcement learning on human feedback (RLHF). RLHF combines reinforce-
+ment learning with human ratings to optimize the parameters of the model.
+With lots of human feedback, you end up with a model capable of outputting
+text that aligns with what humans prefer.
+
+Large language models are already great at modeling text and probabilistically modeling language.
+
+## Diffusing Innovation
+
+Latent diffusion is the process of progressively denoising over long time series. This process can be used to start from
+an image of random noise to generate incredible realistic images.
+
+At their core, diffusion models are based on a process of iterative refinement. Initially, they start with a pattern of random noise. Over successive iterations,
+this noise is gradually shaped into a coherent output, whether that be an
+image, text, or another form of data.
+
+## Talking to LLMs
+
+Prompt engineering is the process of strategically formulating input prompts to effectively guide a large language model to generate
+the output you want.
+
+Chain-of-thought prompting involves prompting a large language
+model to break a problem into sub-tasks and chain those sub-tasks together into an output. In other words, you’re guiding a large language model to show
+its chain-of-thought before producing the output.
+
+Retrieval augmented generation, or RAG is the process of retrieving appropriate facts and context for a large language model to then use in its response.
+
+RAG is effective. However, it requires a robust retrieval pipeline.
+
+Structured prompting relies on some large language
+model’s ability to generate outputs according to a JSON Schema specification.
+
+Structured prompting relies on the ability of large language models to generate structured outputs. The idea is that you define a schema you’d like your large
+language model to follow, prompt the model, and receive a data structure
+that your application understands back from the model’s generation
+
+## Compressing Knowledge
+
+Quantization is the process of converting a continuous range of values to a
+finite range of values.
+
+In the context of machine
+learning, quantization refers to the quantization of machine learning model
+weights. Models are typically trained in 32-bit, 16-bit (half), or mixed (both)
+precision. Post-training quantization is the process of taking these 32-bit or
+16-bit model weights and converting them to 8-bit or even 4-bit integers.
+
+Quantization significantly reduces the storage and memory requirements of
+large language models such that they can run efficiently on consumer hardware.
+
+Low-rank adaptation is a technique for reducing the memory requirements
+of fine-tuning pre-trained large language models.
+
+Rather than updating a model’s full weights, you initialize and train
+a small number of adapters on specific layers.
+
+## Moving Forward
+
+The website [arxiv-sanity](https://arxiv-sanity-lite.com/) is an excellent tool for filtering through trending papers
+in machine learning.
+
+In order to stay up to date with trending models and advancements in
+implementations, [HuggingFace](https://huggingface.co) does an excellent job documenting trending
+models and staying at the cutting edge of machine learning that works.
+
+The Elixir machine learning ecosystem has made great strides in the past
+three years. The ecosystem now has:
+
+* Data Processing and Exploration (Explorer)
+* Data Visualization (Vega, Tucan)
+* Numerical Computation (Nx)
+* Traditional Machine Learning (Scholar)
+* Decision Trees (EXGBoost)
+* Neural Networks (Axon)
+* Pre-trained models and machine learning tasks (Bumblebee)
+* Code Notebooks (Livebook)
